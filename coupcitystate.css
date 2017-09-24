@@ -1,0 +1,234 @@
+/**
+ *------
+ * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
+ * Coup implementation : © quietmint
+ *
+ * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+ * See http://en.boardgamearena.com/#!doc/Studio for more information.
+ * -----
+ *
+ * coupcitystate.css
+ *
+ * Coup stylesheet
+ *
+ */
+
+@import url(../../../css/csslayer.css);
+@import url('https://fonts.googleapis.com/css?family=IM+Fell+English+SC|Libre+Baskerville:700');
+
+/* Characters */
+
+.character-name {
+  display: inline-block;
+  border-radius: 3px;
+  color: white;
+  font: normal 500 90%/110% 'Roboto', Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 3px black;
+  padding: 1px 6px;
+  margin: 0 1px;
+}
+
+
+/* Action buttons (during turn) */
+
+#myactions-wrap {
+  display: none;
+}
+
+#myactions {
+  float: left;
+  margin-right: 5px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 100%;
+  border-bottom: 1px solid #FFAB40;
+  width: 435px;
+}
+
+#myactions td {
+  border-top: 1px solid #FFAB40;
+  padding: 6px 0;
+  font-weight: 500;
+}
+
+#myactions td.has-button {
+  padding-right: 12px;
+}
+
+#myactions .blockable {
+  font-size: 12px;
+  font-weight: normal;
+  text-align: right;
+  float: right;
+}
+
+#myactions .bgabutton {
+  margin: 0;
+  padding: 6px 8px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+#placemats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.placemat {
+  width: 220px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  text-align: center;
+  margin: 2px;
+  padding: 5px 0 5px 10px;
+  border: 2px solid transparent;
+  transition: border-color 250ms ease, background 1s ease;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.placemat .playername {
+  font-family: 'IM Fell English SC', serif;
+  font-weight: bold;
+  margin: 0 10px .5em 0;
+}
+
+.placemat .stockitem_unselectable {
+  cursor: pointer !important;
+}
+
+.placemat.mine .stockitem_unselectable {
+  cursor: default !important;
+}
+
+.placemat.selected {
+  border-color: red;
+}
+
+.placemat.mine {
+  width: 668px;
+  border: 0;
+  cursor: default;
+}
+
+.placemat.eliminated {
+  background: transparent;
+  cursor: default;
+}
+
+.placemat.eliminated .coinarea {
+  display: none;
+}
+
+.placemat.eliminated .playername {
+  text-decoration: line-through;
+}
+
+.board {
+  display: inline-block;
+}
+
+.coinarea {
+  display: flex;
+  align-items: center;
+}
+
+.coincount {
+  flex: 0 0 auto;
+  font: bold 14px/100% 'Libre Baskerville', serif;
+  text-shadow: 0px 0px 1px #FFB74D;
+  padding: 0 5px;
+}
+
+.coins {
+  width: 170px;
+}
+
+.coin {
+  filter: drop-shadow(-1px 1px 0 rgba(0, 0, 0, 0.4));
+}
+
+.cards {
+  flex: 0 0 auto;
+  width: 205px;
+  perspective: 800px;
+}
+
+.card {
+  border-radius: 10px;
+  box-shadow: -1px 1px 2px rgba(0, 0, 0, 0.5);
+  transform-style: preserve-3d;
+  transform-origin: left center;
+}
+
+.card .card-detail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  text-shadow: 0 0 3px white;
+  font: bold 11px/100% 'Libre Baskerville', serif;
+}
+
+.card .card-name {
+  position: absolute;
+  bottom: 13px;
+  left: 0;
+  right: 0;
+  text-shadow: -1px -1px 0 rgba(255, 255, 255, 0.5), -1px 1px 0 rgba(255, 255, 255, 0.5), 1px -1px 0 rgba(255, 255, 255, 0.5), 1px 1px 0 rgba(255, 255, 255, 0.5);
+  font: italic 18px/100% 'IM Fell English SC', serif;
+}
+
+@keyframes reveal-flip {
+  0% {
+    transform: translateX(100%) rotateY(-180deg);
+    filter: grayscale(0%);
+    box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    transform: translateX(0) rotateY(0);
+    filter: grayscale(0%);
+    box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.card.reveal {
+  animation: reveal-flip 2s ease-out;
+}
+
+.card.dead {
+  filter: grayscale(75%);
+  box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5), inset 0 0 0 65px rgba(0, 0, 0, 0.4), inset 0 0 0 5px rgba(0, 0, 0, 0.25);
+  color: #222 !important;
+}
+
+.card.dead .card-detail {
+  text-shadow: none;
+}
+
+.card.dead .card-name {
+  text-shadow: none;
+}
+
+
+/* Double width between (0 - 675) or between (701 - 918) */
+
+@media only screen and (max-width: 675px),
+screen and (min-width: 700px) and (max-width: 918px) {
+  .placemat.mine {
+    width: 444px;
+  }
+  #myactions {
+    float: none;
+    margin-bottom: 10px;
+    width: 429px;
+  }
+  .board {
+    margin: 0 auto;
+  }
+}

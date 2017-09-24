@@ -1,0 +1,1033 @@
+<?php
+ /**
+  *------
+  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
+  * Coup implementation : © quietmint
+  *
+  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+  * See http://en.boardgamearena.com/#!doc/Studio for more information.
+  * -----
+  *
+  * coupcitystate.game.php
+  *
+  * This is the main file for your game logic.
+  *
+  * In this PHP file, you are going to defines the rules of the game.
+  *
+  */
+
+require_once(APP_GAMEMODULE_PATH.'module/table/table.game.php');
+
+class coupcitystate extends Table
+{
+    public function __construct()
+    {
+        // Your global variables labels:
+        //  Here, you can assign labels to global variables you are using for this game.
+        //  You can use any number of global variables with IDs between 10 and 99.
+        //  If your game has options (variants), you also have to associate here a label to
+        //  the corresponding ID in gameoptions.inc.php.
+        // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
+        parent::__construct();
+
+        self::initGameStateLabels(array(
+            'action' => 10,
+            'reasonChoose' => 11,
+            'playerTurn' => 20,
+            'playerChallenge' => 21,
+            'playerBlock' => 22,
+            'playerKill' => 23,
+            'playerTarget' => 24,
+            'cardReplace' => 30,
+            'cardReveal' => 31,
+            'cardKill' => 32,
+            'cardCoup' => 33,
+            'typeBlock' => 40
+        ));
+
+        $this->cards = self::getNew('module.common.deck');
+        $this->cards->init('card');
+    }
+
+    protected function getGameName()
+    {
+        // Used for translations and stuff. Please do not modify.
+        return 'coupcitystate';
+    }
+
+    /*
+        setupNewGame:
+
+        This method is called only once, when a new game is launched.
+        In this method, you must setup the game according to the game rules, so that
+        the game is ready to be played.
+    */
+    protected function setupNewGame($players, $options = array())
+    {
+        $sql = 'DELETE FROM player ';
+        self::DbQuery($sql);
+
+        // Set the colors of the players with HTML color code
+        // The default below is red/green/blue/orange/brown
+        // The number of colors defined here must correspond to the maximum number of players allowed for the gams
+        $gameinfos = self::getGameinfos();
+        $default_colors = $gameinfos['player_colors'];
+
+        // Create players
+        // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
+        $sql = 'INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES ';
+        $values = array();
+        foreach ($players as $player_id => $player) {
+            $color = array_shift($default_colors);
+            $values[] = "('".$player_id."','$color','".$player['player_canal']."','".addslashes($player['player_name'])."','".addslashes($player['player_avatar'])."')";
+        }
+        $sql .= implode($values, ',');
+        self::DbQuery($sql);
+        self::reattributeColorsBasedOnPreferences($players, $gameinfos['player_colors']);
+        self::reloadPlayersBasicInfos();
+
+        /************ Start the game initialization *****/
+
+        // Init global values with their initial values
+        self::setGameStateInitialValue('playerTurn', 0);
+
+        // Init game statistics
+        self::initStat('player', 'turns', 0);
+        self::initStat('player', 'wealthIn', 0);
+        self::initStat('player', 'wealthOut', 0);
+        self::initStat('player', 'truth', 0);
+        self::initStat('player', 'lie', 0);
+        self::initStat('player', 'honesty', 100);
+        self::initStat('player', 'action1', 0);
+        self::initStat('player', 'action2', 0);
+        self::initStat('player', 'action3', 0);
+        self::initStat('player', 'action4', 0);
+        self::initStat('player', 'action5', 0);
+        self::initStat('player', 'action6', 0);
+        self::initStat('player', 'action7', 0);
+        self::initStat('player', 'blockIssued', 0);
+        self::initStat('player', 'blockReceived', 0);
+        self::initStat('player', 'challengeIssued', 0);
+        self::initStat('player', 'challengeReceived', 0);
+        self::initStat('player', 'challengeWin', 0);
+        self::initStat('player', 'challengeLoss', 0);
+
+        // Create 3 cards of each type
+        $cards = array();
+        foreach ($this->characters as $character => $character_ref) {
+            if ($character > 0) {
+                $cards[] = array('type' => "$character", 'type_arg' => 0, 'nbr' => 3);
+            }
+        }
+        $this->cards->createCards($cards, 'deck');
+
+        // Activate first player (which is in general a good idea :) )
+        $this->activeNextPlayer();
+    }
+
+    /*
+        getAllDatas:
+
+        Gather all informations about current game situation (visible by the current player).
+
+        The method is called each time the game interface is displayed to a player, ie:
+        _ when the game starts
+        _ when a player refreshes the game page (F5)
+    */
+    protected function getAllDatas()
+    {
+        $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
+        $players = self::getCollectionFromDb('SELECT player_id id, player_score score, player_wealth wealth FROM player');
+        $spectator = !array_key_exists($current_player_id, $players);
+
+        $result = array(
+            'players' => $players,
+            'actions' => $this->actions,
+            'characters' => $this->characters,
+        );
+
+        // Visible cards in my hand
+        if (!$spectator) {
+            $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
+        }
+
+        // Visible cards in all tableaus
+        $result['tableau'] = $this->cards->getCardsInLocation('tableau');
+
+        // Hidden card counts in hands
+        $result['handCounts'] = $this->cards->countCardsByLocationArgs('hand');
+
+        return $result;
+    }
+
+    /*
+        getGameProgression:
+
+        Compute and return the current game progression.
+        The number returned must be an integer beween 0 (=the game just started) and
+        100 (= the game is finished or almost finished).
+
+        This method is called each time we are in a game state with the "updateGameProgression" property set to true
+        (see states.inc.php)
+    */
+    public function getGameProgression()
+    {
+        $win = (self::getPlayersNumber() * 2) - 1;
+        $current = $this->cards->countCardInLocation('tableau');
+        return floor(($current / $win) * 100);
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Utility functions
+    ////////////
+
+    /*
+        In this space, you can put any utility methods useful for your game logic
+    */
+
+    public function getName($player_id)
+    {
+        $sql = "SELECT player_name FROM player WHERE player_id='$player_id'";
+        return self::getUniqueValueFromDB($sql);
+    }
+
+    public function getCard($card_id, $location=null, $location_arg=0)
+    {
+        // Get a card include character attributes
+        $card = $this->cards->getCard($card_id);
+
+        // Optionally verify the card's location
+        if ($card == null) {
+            throw new BgaVisibleSystemException('Card ' . $card_id . ' not found.');
+        }
+        if ($location != null && $card['location'] != $location || $location_arg != 0 && $card['location_arg'] != $location_arg) {
+            throw new BgaVisibleSystemException('Card ' . $card_id . ' not in ' . $card['location'] . ($location_arg ? ' for player ' . $location_arg : ''));
+        }
+
+        $card = array_merge($this->characters[$card['type']], $card);
+        return $card;
+    }
+
+    public function getCardIds($location, $location_arg)
+    {
+        // Get multiple cards as ID list
+        $ids = array();
+        $cards = $this->cards->getCardsInLocation($location, $location_arg);
+        foreach ($cards as $card) {
+            $ids[] = $card['id'];
+        }
+        return $ids;
+    }
+
+    public function getWealth($player_id)
+    {
+        $sql = "SELECT player_wealth FROM player WHERE player_id='$player_id'";
+        return self::getUniqueValueFromDB($sql);
+    }
+
+    public function addWealth($player_id, $amount)
+    {
+        $sql = "UPDATE player SET player_wealth = GREATEST(0, player_wealth + $amount) WHERE player_id='$player_id'";
+        self::DbQuery($sql);
+        return $this->getWealth($player_id);
+    }
+
+    public function updateHonesty($player_id)
+    {
+        $lies = self::getStat('lie', $player_id);
+        $truths = self::getStat('truth', $player_id);
+        self::setStat(round($truths / ($lies + $truths) * 100), 'honesty', $player_id);
+    }
+
+    public function doKill($player_id, $playerTurn, $reason, $card_id, $card_id2=0)
+    {
+        if ($card_id2 > 0) {
+            // Double elimination
+            $this->cards->moveCards(array($card_id, $card_id2), 'tableau', $player_id);
+            $handCount = $this->cards->countCardInLocation('hand', $player_id);
+            $card = $this->getCard($card_id);
+            $card2 = $this->getCard($card_id2);
+            self::notifyAllPlayers('reveal', clienttranslate('${player_name} loses both the ${card_name} and the ${card_name2} in a double elimination') . ' (' . $this->reasonText[$reason] . ').', array(
+                'player_id' => $player_id,
+                'player_name' => $this->getName($player_id),
+                'player_name2' => $this->getName($playerTurn),
+                'card_ids' => array($card['id'], $card2['id']),
+                'card_types' => array($card['type'], $card2['type']),
+                'card_name' => $card['name'],
+                'card_name2' => $card2['name']
+            ));
+        } else {
+            $this->cards->moveCard($card_id, 'tableau', $player_id);
+            $handCount = $this->cards->countCardInLocation('hand', $player_id);
+            $card = $this->getCard($card_id);
+            if ($handCount == 0) {
+                $msg = clienttranslate('${player_name} loses the ${card_name} and is eliminated') . ' (' . $this->reasonText[$reason] . ').';
+            } else {
+                $msg = clienttranslate('${player_name} loses the ${card_name}'). ' (' . $this->reasonText[$reason] . ').';
+            }
+            $args = array(
+                'player_id' => $player_id,
+                'player_name' => $this->getName($player_id),
+                'card_ids' => array($card['id']),
+                'card_types' => array($card['type']),
+                'card_name' => $card['name']
+            );
+            if ($playerTurn > 0) {
+                $args['player_name2'] = $this->getName($playerTurn);
+            }
+            self::notifyAllPlayers('reveal', $msg, $args);
+        }
+
+        // Check for elimination
+        if ($handCount == 0) {
+            self::eliminatePlayer($player_id);
+            $sql = 'UPDATE player SET player_wealth = 0 WHERE player_eliminated = 1';
+            self::DbQuery($sql);
+            self::notifyAllPlayers('wealthNoDelay', '', array(
+                'player_id' => $player_id,
+                'wealth' => 0
+            ));
+            return true;
+        }
+        return false;
+    }
+
+    public function checkWin()
+    {
+        $sql = 'SELECT COUNT(*) FROM player WHERE player_eliminated = 0 AND player_zombie = 0';
+        $activeCount = self::getUniqueValueFromDB($sql);
+        if ($activeCount == 1) { // win
+            self::DbQuery('UPDATE player SET player_score = player_score + 1 WHERE player_eliminated = 0 AND player_zombie = 0');
+            $this->gamestate->nextState('gameEnd');
+            return true;
+        }
+        return false;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Player actions
+    ////////////
+
+    /*
+        Each time a player is doing some game action, one of the methods below is called.
+        (note: each method below must match an input method in coupcitystate.action.php)
+    */
+
+    public function act($action, $target)
+    {
+        self::checkAction('act');
+        $player_id = self::getActivePlayerId();
+        $action_ref = $this->actions[$action];
+
+        // Check wealth
+        $wealth = $this->getWealth($player_id);
+        if ($wealth >= 10 && $action_ref['name'] != 'Coup') {
+            throw new BgaUserException(self::_('You must Coup because you have 10 or more coins.'));
+        } elseif ($wealth < $action_ref['cost']) {
+            throw new BgaUserException(sprintf(self::_('You need %d coins for this action.'), $action_ref['cost']));
+        }
+
+        // Check target
+        if ($action_ref['target'] == true) {
+            if ($target == 0 || $target == $player_id || $this->cards->countCardInLocation('hand', $target) == 0) {
+                throw new BgaUserException(self::_('Choose an active player before performing this action.'));
+            }
+            if ($action_ref['name'] == 'Steal' && $this->getWealth($target) == 0) {
+                throw new BgaUserException(self::_('Choose an active player with coins before performing this action.'));
+            }
+            self::setGameStateValue('playerTarget', $target);
+        }
+        self::setGameStateValue('action', $action);
+
+        // Is this a lie? (only for statistics, we'll recompute later)
+        if ($action_ref['character'] > 0) {
+            $hand = $this->cards->getCardsInLocation('hand', $player_id);
+            $lie = true;
+            foreach ($hand as $card_id => $card) {
+                if ($action_ref['character'] == $card['type']) {
+                    $lie = false;
+                    break;
+                }
+            }
+            self::incStat(1, $lie ? 'lie' : 'truth', $player_id);
+            $this->updateHonesty($player_id);
+        }
+
+        // Ask other players?
+        if ($action_ref['logAttempt']) {
+            $args = array(
+                'player_name' => $this->getName($player_id)
+            );
+            if ($target) {
+                $args['player_name2'] = $this->getName($target);
+            }
+            if ($action_ref['character'] > 0) {
+                $character = $action_ref['character'];
+                $args['card_name'] = $this->characters[$character]['name'];
+            }
+            self::notifyAllPlayers('message', $action_ref['logAttempt'], $args);
+            $this->gamestate->nextState('ask');
+        } else {
+            $this->gamestate->nextState('execute');
+        }
+    }
+
+    public function actionNo()
+    {
+        self::checkAction('actionNo');
+        $player_id = self::getCurrentPlayerId();
+        /*self::notifyAllPlayers('message', clienttranslate('${player_name} does not protest.'), array(
+            'player_name' => $this->getName($player_id)
+        ));*/
+        $this->gamestate->setPlayerNonMultiactive($player_id, 'execute');
+    }
+
+    public function actionYes()
+    {
+        self::checkAction('actionYes');
+        $player_id = self::getCurrentPlayerId();
+        self::setGameStateValue('playerChallenge', $player_id);
+
+        $action = self::getGameStateValue('action');
+        $action_ref = $this->actions[$action];
+        $playerBlock = self::getGameStateValue('playerBlock');
+        if ($playerBlock > 0) {
+            $player = $playerBlock;
+            $type = self::getGameStateValue('typeBlock');
+        } else {
+            $player = self::getGameStateValue('playerTurn');
+            $type = $action_ref['character'];
+        }
+        self::notifyAllPlayers('message', clienttranslate('${player_name} challenges ${player_name2} to reveal the ${card_name}!'), array(
+            'player_name' => $this->getName($player_id),
+            'player_name2' => $this->getName($player),
+            'card_name' => $this->characters[$type]['name']
+        ));
+        self::incStat(1, 'challengeIssued', $player_id);
+        self::incStat(1, 'challengeReceived', $player);
+
+        $this->gamestate->nextState('yes');
+    }
+
+    public function actionBlock($card_type)
+    {
+        self::checkAction('actionBlock');
+        $player_id = self::getCurrentPlayerId();
+        $playerTurn = self::getGameStateValue('playerTurn');
+        self::setGameStateValue('playerBlock', $player_id);
+        self::setGameStateValue('typeBlock', $card_type);
+
+        // Is this a lie? (only for statistics, we'll recompute later)
+        $hand = $this->cards->getCardsInLocation('hand', $player_id);
+        $lie = true;
+        foreach ($hand as $card_id => $card) {
+            if ($card_type == $card['type']) {
+                $lie = false;
+                break;
+            }
+        }
+        self::incStat(1, $lie ? 'lie' : 'truth', $player_id);
+        $this->updateHonesty($player_id);
+
+        self::notifyAllPlayers('message', clienttranslate('${player_name} claims the ${card_name} to block ${player_name2}...'), array(
+            'player_name' => $this->getName($player_id),
+            'player_name2' => $this->getName($playerTurn),
+            'card_name' => $this->characters[$card_type]['name']
+        ));
+        self::incStat(1, 'blockIssued', $player_id);
+        self::incStat(1, 'blockReceived', $playerTurn);
+
+        $this->gamestate->nextState('askBlock');
+    }
+
+    public function actionChooseCard($card_id)
+    {
+        self::checkAction('actionChooseCard');
+        $reasonNum = self::getGameStateValue('reasonChoose');
+
+        if ($reasonNum == 1) { // reveal for challenge/block
+            $character = self::getGameStateValue('typeBlock');
+            if ($character == 0) { // challenge
+                self::setGameStateValue('cardReveal', $card_id);
+                $this->gamestate->nextState('challenge');
+            } else { // block
+                self::setGameStateValue('cardReveal', $card_id);
+                $this->gamestate->nextState('challengeBlock');
+            }
+        } elseif ($reasonNum == 2) { // lost challenge
+            self::setGameStateValue('cardKill', $card_id);
+            $this->gamestate->nextState('killLoss');
+        } elseif ($reasonNum == 3) { // killed
+            self::setGameStateValue('cardCoup', $card_id);
+            $this->gamestate->nextState('killCoup');
+        }
+    }
+
+    public function actionDiscard($card_ids)
+    {
+        self::checkAction('actionDiscard');
+        $player_id = self::getActivePlayerId();
+
+        // Ensure the correct number of cards are selected
+        $requiredCount = 2;
+        if (count($card_ids) != $requiredCount) {
+            throw new BgaUserException(self::_('You must choose 2 active cards to discard.'));
+        }
+        foreach ($card_ids as $card_id) {
+            $card = $this->getCard($card_id, 'hand', $player_id);
+        }
+
+        $this->cards->moveCards($card_ids, 'deck');
+        $this->cards->shuffle('deck');
+        self::notifyPlayer($player_id, 'discardNoDelay', '', array(
+            'player_id' => $player_id,
+            'card_ids' => $card_ids
+        ));
+        self::notifyAllPlayers('discard', clienttranslate('${player_name} discards 2 cards and shuffles the deck.'), array(
+            'player_id' => $player_id,
+            'player_name' => $this->getName($player_id),
+            'count' => 2
+        ));
+        $this->gamestate->nextState('killLoss');
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game state arguments
+    ////////////
+
+    /*
+        Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
+        These methods function is to return some additional information that is specific to the current
+        game state.
+    */
+
+    public function argAsk()
+    {
+        $output = array();
+        $playerBlock = self::getGameStateValue('playerBlock');
+        $playerTurn = self::getGameStateValue('playerTurn');
+        if ($playerBlock > 0) {
+            $player = $playerBlock;
+            $type = self::getGameStateValue('typeBlock');
+        } else {
+            $player = $playerTurn;
+            $action = self::getGameStateValue('action');
+            $action_ref = $this->actions[$action];
+            $type = $action_ref['character'];
+            if (count($action_ref['blockers']) > 0) {
+                if ($action_ref['name'] == 'Foreign Aid') {
+                    // Anyone can block Foreign Aid
+                    $output['blockers'] = $action_ref['blockers'];
+                } else {
+                    // Only target can block Steal/Assassinate
+                    $target = self::getGameStateValue('playerTarget');
+                    $output['_private'] = array($target => array('blockers' => $action_ref['blockers']));
+                }
+            }
+            $output['action'] = $action_ref['name'];
+        }
+
+        $output['player'] = $this->getName($player);
+        if ($type > 0) {
+            $output['card_name'] = $this->characters[$type]['name'];
+        }
+        return $output;
+    }
+
+    public function argChooseCard()
+    {
+        $reasonNum = self::getGameStateValue('reasonChoose');
+        $args = array(
+            'reason' => $this->reasonText[$reasonNum]
+        );
+        if ($reasonNum == 1) { // reveal for challenge/block
+            $character = self::getGameStateValue('typeBlock');
+            if ($character == 0) {
+                $action = self::getGameStateValue('action');
+                $action_ref = $this->actions[$action];
+                $character = $action_ref['character'];
+            }
+            $args['reason'] = str_replace('${card_name}', $this->characters[$character]['name'], $args['reason']);
+        } elseif ($reasonNum == 2) { // lost challenge
+            // nothing
+        } elseif ($reasonNum == 3) { // killed
+            $playerTurn = self::getGameStateValue('playerTurn');
+            $args['reason'] = str_replace('${player_name2}', $this->getName($playerTurn), $args['reason']);
+        }
+        return $args;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game state actions
+    ////////////
+
+    /*
+        Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
+        The action method of state X is called everytime the current game state is set to X.
+    */
+
+    public function stNewHand()
+    {
+        // Take back all cards (from any location => null) to deck
+        $this->cards->moveAllCardsInLocation(null, 'deck');
+        $this->cards->shuffle('deck');
+
+        // Give 2 coins to each player
+        // (for 2-player game, give 1 coin)
+        $wealth = self::getPlayersNumber() == 2 ? 1 : 2;
+        $sql = "UPDATE player SET player_wealth = $wealth";
+        self::DbQuery($sql);
+
+        // Deal 2 cards to each player
+        $players = self::loadPlayersBasicInfos();
+        foreach ($players as $player_id => $player) {
+            $hand = $this->cards->pickCards(2, 'deck', $player_id);
+            self::notifyPlayer($player_id, 'newHand', '', array(
+                'cards' => $hand,
+                'wealth' => $wealth
+            ));
+            self::incStat($wealth, 'wealthIn', $player_id);
+        }
+        
+        self::notifyAllPlayers('message', clienttranslate('The game begins with ${count} cards remaining in the deck.'), array(
+            'count' => $this->cards->countCardInLocation('deck')
+        ));
+
+        $this->gamestate->nextState('');
+    }
+
+    public function stPlayerStart()
+    {
+        // Turns are chaos, so save the current player
+        $playerTurn = self::getActivePlayerId();
+        self::setGameStateValue('playerTurn', $playerTurn);
+        self::incStat(1, 'turns', $playerTurn);
+
+        // Clear all other saved state values
+        self::setGameStateValue('action', 0);
+        self::setGameStateValue('reasonChoose', 0);
+        self::setGameStateValue('playerChallenge', 0);
+        self::setGameStateValue('playerBlock', 0);
+        self::setGameStateValue('playerKill', 0);
+        self::setGameStateValue('playerTarget', 0);
+        self::setGameStateValue('cardReplace', 0);
+        self::setGameStateValue('cardReveal', 0);
+        self::setGameStateValue('cardKill', 0);
+        self::setGameStateValue('cardCoup', 0);
+        self::setGameStateValue('typeBlock', 0);
+    }
+
+    public function stPlayerEnd()
+    {
+        // Check for winner, or continue
+        if (!$this->checkWin()) {
+            // We can't trust the active player
+            // Use saved state value to determine next player
+            $playerTurn = self::getGameStateValue('playerTurn');
+            $nextPlayer = self::getPlayerAfter($playerTurn);
+            $this->gamestate->changeActivePlayer($nextPlayer);
+            $this->gamestate->nextState('playerStart');
+        }
+    }
+
+    public function stAsk()
+    {
+        // Activate all but one
+        $this->gamestate->setAllPlayersMultiactive();
+        $skip = self::getGameStateValue('playerBlock');
+        if ($skip == 0) {
+            $skip = self::getGameStateValue('playerTurn');
+        }
+        $this->gamestate->setPlayerNonMultiactive($skip, 'execute');
+    }
+
+    public function stChallenge()
+    {
+        $playerTurn = self::getGameStateValue('playerTurn');
+        $playerChallenge = self::getGameStateValue('playerChallenge');
+        $cardReveal = self::getGameStateValue('cardReveal');
+
+        if ($cardReveal == 0) {
+            // Can we auto-select?
+            $hand = $this->getCardIds('hand', $playerTurn);
+            if (count($hand) == 1) {
+                $cardReveal = array_shift($hand);
+            }
+        }
+
+        if ($cardReveal > 0) {
+            $playerChallenge = self::getGameStateValue('playerChallenge');
+            $action = self::getGameStateValue('action');
+            $action_ref = $this->actions[$action];
+            $card = $this->getCard($cardReveal, 'hand', $playerTurn);
+            if ($card['type'] == $action_ref['character']) { // truth, action occurs
+                $this->cards->moveCard($cardReveal, 'tableau', $playerTurn);
+                self::notifyAllPlayers('reveal', clienttranslate('${player_name} reveals the ${card_name} as claimed.'), array(
+                    'player_id' => $playerTurn,
+                    'player_name' => $this->getName($playerTurn),
+                    'card_name' => $card['name'],
+                    'card_ids' => array($card['id']),
+                    'card_types' => array($card['type'])
+                ));
+                self::incStat(1, 'challengeLoss', $playerChallenge);
+
+                // Turn player must replace card
+                self::setGameStateValue('cardReplace', $cardReveal);
+
+                // Challenger must kill a card
+                self::setGameStateValue('playerKill', $playerChallenge);
+                self::setGameStateValue('cardKill', 0);
+
+                $this->gamestate->nextState('execute');
+            } else { // lie, action cancelled
+                self::notifyAllPlayers('message', clienttranslate('${player_name} reveals the ${card_name} and was bluffing! The ${action} does not occur.'), array(
+                    'player_name' => $this->getName($playerTurn),
+                    'card_name' => $card['name'],
+                    'action' => $action_ref['name']
+                ));
+                self::incStat(1, 'challengeWin', $playerChallenge);
+
+                // Turn player must kill revealed card
+                self::setGameStateValue('playerKill', $playerTurn);
+                self::setGameStateValue('cardKill', $cardReveal);
+
+                // Skip replace and action, go to kill
+                $this->gamestate->nextState('killLoss');
+            }
+        } else { // turn reveal prompt
+            self::setGameStateValue('reasonChoose', 1);
+            $this->gamestate->changeActivePlayer($playerTurn);
+            $this->gamestate->nextState('askChooseCard');
+        }
+    }
+
+    public function stChallengeBlock()
+    {
+        $playerBlock = self::getGameStateValue('playerBlock');
+        $cardReveal = self::getGameStateValue('cardReveal');
+
+        if ($cardReveal == 0) {
+            // Can we auto-select?
+            $hand = $this->getCardIds('hand', $playerBlock);
+            if (count($hand) == 1) {
+                $cardReveal = array_shift($hand);
+            }
+        }
+
+        if ($cardReveal > 0) {
+            $playerChallenge = self::getGameStateValue('playerChallenge');
+            $typeBlock = self::getGameStateValue('typeBlock');
+            $card = $this->getCard($cardReveal, 'hand', $playerBlock);
+            if ($card['type'] == $typeBlock) { // truth, action blocked
+                $this->cards->moveCard($cardReveal, 'tableau', $playerBlock);
+                self::notifyAllPlayers('reveal', clienttranslate('${player_name} reveals the ${card_name} as claimed.'), array(
+                    'player_id' => $playerBlock,
+                    'player_name' => $this->getName($playerBlock),
+                    'card_name' => $card['name'],
+                    'card_ids' => array($card['id']),
+                    'card_types' => array($card['type'])
+                ));
+                self::incStat(1, 'challengeLoss', $playerChallenge);
+
+                // Blocker must replace card
+                self::setGameStateValue('cardReplace', $cardReveal);
+
+                // Challenger must kill a card
+                self::setGameStateValue('playerKill', $playerChallenge);
+                self::setGameStateValue('cardKill', 0);
+            } else { // lie, action occurs
+                self::notifyAllPlayers('message', clienttranslate('${player_name} reveals the ${card_name} and was bluffing!'), array(
+                    'player_name' => $this->getName($playerBlock),
+                    'card_name' => $card['name']
+                ));
+                self::incStat(1, 'challengeWin', $playerChallenge);
+
+                // Action still occurs
+                self::setGameStateValue('playerBlock', 0);
+
+                // Blocker must kill revealed card
+                self::setGameStateValue('playerKill', $playerBlock);
+                self::setGameStateValue('cardKill', $cardReveal);
+            }
+            $this->gamestate->nextState('execute');
+        } else { // block reveal prompt
+            self::setGameStateValue('reasonChoose', 1);
+            $this->gamestate->changeActivePlayer($playerBlock);
+            $this->gamestate->nextState('askChooseCard');
+        }
+    }
+
+    public function stExecute()
+    {
+        $action = self::getGameStateValue('action');
+        $action_ref = $this->actions[$action];
+        $playerTurn = self::getGameStateValue('playerTurn');
+        $playerBlock = self::getGameStateValue('playerBlock');
+
+        // First replace any revealed card
+        $cardReplace = self::getGameStateValue('cardReplace');
+        if ($cardReplace > 0) {
+            $player = $playerBlock ? $playerBlock : $playerTurn;
+            $oldCard = $this->getCard($cardReplace, 'tableau', $player);
+            $this->cards->moveCard($cardReplace, 'deck');
+            $this->cards->shuffle('deck');
+            $newCard = $this->cards->pickCard('deck', $player);
+            self::notifyAllPlayers('discard', clienttranslate('${player_name} discards the ${card_name}, shuffles the deck, and draws a replacement.'), array(
+                'player_id' => $player,
+                'player_name' => $this->getName($player),
+                'card_name' => $oldCard['name'],
+                'card_ids' => array($oldCard['id'])
+            ));
+            self::notifyPlayer($player, 'drawNoDelay', '', array(
+                'player_id' => $player,
+                'cards' => array($newCard)
+            ));
+            self::notifyAllPlayers('draw', '', array(
+                'player_id' => $player,
+                'count' => 1
+            ));
+        }
+
+        // If not blocked, action occurs
+        // Determine how to log it
+        $transition = 'killLoss';
+        $target = self::getGameStateValue('playerTarget');
+        $logAs = 'wealth';
+        $args = array(
+            'player_id' => $playerTurn,
+            'player_name' => $this->getName($playerTurn)
+        );
+
+        if ($playerBlock == 0) { // not blocked
+            switch ($action_ref['name']) {
+            case 'Income':
+                $args['wealth'] = $this->addWealth($playerTurn, 1);
+                self::incStat(1, 'wealthIn', $playerTurn);
+                break;
+
+            case 'Foreign Aid':
+                $args['wealth'] = $this->addWealth($playerTurn, 2);
+                self::incStat(2, 'wealthIn', $playerTurn);
+                break;
+
+            case 'Coup':
+                $args['wealth'] = $this->addWealth($playerTurn, -7);
+                self::incStat(7, 'wealthOut', $playerTurn);
+                $transition = 'killCoup';
+                break;
+
+            case 'Tax':
+                $args['wealth'] = $this->addWealth($playerTurn, 3);
+                self::incStat(3, 'wealthIn', $playerTurn);
+                break;
+
+            case 'Assassinate':
+                $args['wealth'] = $this->addWealth($playerTurn, -3);
+                self::incStat(3, 'wealthOut', $playerTurn);
+                $transition = 'killCoup';
+                break;
+
+            case 'Exchange':
+                $args['count'] = 2;
+                $newCards = $this->cards->pickCards($args['count'], 'deck', $playerTurn);
+                self::notifyPlayer($playerTurn, 'drawNoDelay', '', array(
+                    'player_id' => $playerTurn,
+                    'cards' => $newCards
+                ));
+                $transition = 'askDiscard';
+                $logAs = 'draw';
+                break;
+
+            case 'Steal':
+                $args['amount'] = min(2, $this->getWealth($target));
+                $args['wealth'] = $this->addWealth($playerTurn, $args['amount']);
+                $target_wealth = $this->addWealth($target, $args['amount'] * -1);
+                self::notifyAllPlayers('wealthNoDelay', '', array(
+                    'player_id' => $target,
+                    'wealth' => $target_wealth
+                ));
+                self::incStat($args['amount'], 'wealthIn', $playerTurn);
+                break;
+            }
+            if ($target) {
+                $args['player_name2'] = $this->getName($target);
+                if ($action_ref['name'] == 'Steal') {
+                    // Only Steal action is a wealth transfer
+                    $args['player_id2'] = $target;
+                }
+            }
+            if ($action_ref['logExecute']) {
+                self::notifyAllPlayers($logAs, $action_ref['logExecute'], $args);
+            }
+            self::incStat(1, 'action' . $action, $playerTurn);
+        } else { // blocked
+            self::notifyAllPlayers('message', clienttranslate('${player_name}\'s ${action} does not occur.'), array(
+                'player_name' => $this->getName($playerTurn),
+                'action' => $action_ref['name']
+            ));
+            if ($action_ref['name'] == 'Assassinate') {
+                // Still must pay if blocked
+                $wealth = $this->addWealth($playerTurn, -3);
+                self::notifyAllPlayers('wealth', '', array(
+                    'player_id' => $playerTurn,
+                    'wealth' => $wealth
+                ));
+                self::incStat(3, 'wealthOut', $playerTurn);
+            }
+        }
+
+        $this->gamestate->nextState($transition);
+    }
+
+    public function stKillCoup()
+    {
+        $playerTarget = self::getGameStateValue('playerTarget');
+        if ($playerTarget > 0) {
+            $playerKill = self::getGameStateValue('playerKill');
+            $cardCoup = self::getGameStateValue('cardCoup');
+            $cardCoup2 = 0;
+            $reason = 3;
+            $hand = $this->getCardIds('hand', $playerTarget);
+            $doubleElimination = count($hand) == 2 && $playerTarget == $playerKill;
+            if ($doubleElimination || ($cardCoup == 0 && count($hand) == 1)) {
+                // Can we auto-select or double eliminate?
+                $cardCoup = array_shift($hand);
+                if ($doubleElimination) {
+                    $cardCoup2 = array_shift($hand);
+                    $reason = 4;
+                }
+            }
+
+            if ($cardCoup > 0) { // kill
+                $playerTurn = self::getGameStateValue('playerTurn');
+                $eliminated = $this->doKill($playerTarget, $playerTurn, $reason, $cardCoup, $cardCoup2);
+                if ($eliminated) {
+                    // Can't kill this player again if eliminated
+                    if ($playerTarget == $playerKill) {
+                        self::setGameStateValue('playerKill', 0);
+                    }
+                }
+
+                // Check for a winner, or continue
+                if (!$this->checkWin()) {
+                    $this->gamestate->nextState('killLoss');
+                }
+            } else { // prompt
+                $playerTurn = self::getGameStateValue('playerTurn');
+                self::setGameStateValue('reasonChoose', 3);
+                self::notifyAllPlayers('message', clienttranslate('${player_name} must choose a card') . ' (' . $this->reasonText[$reason] . ').', array(
+                    'player_name' => $this->getName($playerTarget),
+                    'player_name2' => $this->getName($playerTurn),
+                ));
+                $this->gamestate->changeActivePlayer($playerTarget);
+                $this->gamestate->nextState('askChooseCard');
+            }
+        } else { // continue
+            $this->gamestate->nextState('killLoss');
+        }
+    }
+
+    public function stKillLoss()
+    {
+        $playerKill = self::getGameStateValue('playerKill');
+        if ($playerKill > 0) {
+            $cardKill = self::getGameStateValue('cardKill');
+            $reason = 2;
+            if ($cardKill == 0) {
+                // Can we auto-select?
+                $hand = $this->getCardIds('hand', $playerKill);
+                if (count($hand) == 1) {
+                    $cardKill = array_shift($hand);
+                }
+            }
+
+            if ($cardKill > 0) { // kill
+                $this->doKill($playerKill, 0, $reason, $cardKill);
+                $this->gamestate->nextState('playerEnd');
+            } else { // prompt
+                self::setGameStateValue('reasonChoose', 2);
+                self::notifyAllPlayers('message', clienttranslate('${player_name} must choose a card') . ' (' . $this->reasonText[$reason] . ').', array(
+                    'player_name' => $this->getName($playerKill)
+                ));
+                $this->gamestate->changeActivePlayer($playerKill);
+                $this->gamestate->nextState('askChooseCard');
+            }
+        } else { // continue
+            $this->gamestate->nextState('playerEnd');
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Zombie
+    ////////////
+
+    /*
+        zombieTurn:
+
+        This method is called each time it is the turn of a player who has quit the game (= "zombie" player).
+        You can do whatever you want in order to make sure the turn of this player ends appropriately
+        (ex: pass).
+    */
+
+    public function zombieTurn($state, $active_player)
+    {
+        if (array_key_exists('zombiePass', $state['transitions'])) {
+            if ($state['type'] == 'multipleactiveplayer') {
+                $this->gamestate->setPlayerNonMultiactive($active_player, 'zombiePass');
+            } else {
+                $this->gamestate->nextState('zombiePass');
+            }
+        } else {
+            // Zombie always choose the first card(s)
+            $hand = $this->getCardIds('hand', $active_player);
+            $first = array_shift($hand);
+            if ($state['name'] == 'askChooseCard') {
+                $this->actionChooseCard($first['id']);
+            } elseif ($state['name'] == 'askDiscard') {
+                $second = array_shift($hand);
+                $this->actionDiscard(array($first['id'], $second['id']));
+            } else {
+                throw new BgaVisibleSystemException('Zombie player ' . $active_player . ' stuck in unexpected state ' . $state['name']);
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////:
+    ////////// DB upgrade
+    //////////
+
+    /*
+        upgradeTableDb:
+
+        You don't have to care about this until your game has been published on BGA.
+        Once your game is on BGA, this method is called everytime the system detects a game running with your old
+        Database scheme.
+        In this case, if you change your Database scheme, you just have to apply the needed changes in order to
+        update the game database and allow the game to continue to run with your new version.
+
+    */
+
+    public function upgradeTableDb($from_version)
+    {
+        // $from_version is the current version of this game database, in numerical form.
+        // For example, if the game was running with a release of your game named "140430-1345",
+        // $from_version is equal to 1404301345
+
+        // Example:
+//        if( $from_version <= 1404301345 )
+//        {
+//            $sql = "ALTER TABLE xxxxxxx ....";
+//            self::DbQuery( $sql );
+//        }
+//        if( $from_version <= 1405061421 )
+//        {
+//            $sql = "CREATE TABLE xxxxxxx ....";
+//            self::DbQuery( $sql );
+//        }
+//        // Please add your future database scheme changes here
+//
+//
+    }
+}
