@@ -1,34 +1,48 @@
 {OVERALL_GAME_HEADER}
-
-<div id="myactions-wrap">
-  <table id="myactions">
-    <!-- BEGIN action -->
-    <tr class="action action-{action_id}">
-      <td class="has-button">
-        <div class="bgabutton bgabutton_blue" data-action="{action_id}">{name}</div>
-      </td>
-      <td>
-        {claimHtml} {text} {subtext}
-        <div class="blockable">→ {blockHtml}</div>
-      </td>
-    </tr>
-    <!-- END action -->
-  </table>
-</div>
-
-<div id="placemats">
-  <!-- BEGIN player -->
-  <div id="placemat_{PLAYER_ID}" class="placemat whiteblock" data-player="{PLAYER_ID}">
-    <div class="playername" style="color: #{PLAYER_COLOR}">{PLAYER_NAME}</div>
-    <div id="board_{PLAYER_ID}" class="board">
-      <div id="cards_{PLAYER_ID}" class="cards"></div>
-      <div class="coinarea">
-        <div id="coincount_{PLAYER_ID}" class="coincount"></div>
-        <div id="coins_{PLAYER_ID}" class="coins"></div>
+<div id="game_wrap">
+  <div id="myactions">
+    <div class="actionrowhead">Actions on your turn:</div>
+    <div class="actionrow">
+      <!-- BEGIN action_any -->
+      <div class="action action-{action_id}" data-action="{action_id}">
+        <div class="actionhead">{name} {claimHtml}</div>
+        <div class="actionwrap">
+          <i class="mdi {icon}"></i>
+          <div class="actiondesc">{text} {subtext} {blockHtml}</div>
+        </div>
       </div>
+      <!-- END action_any -->
+    </div>
+    <div class="actionrow">
+      <!-- BEGIN action -->
+      <div class="action action-{action_id}" data-action="{action_id}">
+        <div class="actionhead">{name} {claimHtml}</div>
+        <div class="actionwrap">
+          <i class="mdi {icon}" style="color: {color}"></i>
+          <div class="actiondesc">{text} {subtext} {blockHtml}</div>
+        </div>
+      </div>
+      <!-- END action -->
     </div>
   </div>
-  <!-- END player -->
-</div>
 
+  <div id="circle" class="circle-{player_count}">
+    <div id="deck" class="oncircle" data-action="6">
+      <div id="deckcount">Deck ({deck_count})</div>
+      <div class="card"></div>
+    </div>
+    <!-- BEGIN player -->
+    <div class="oncircle player-{index}">
+      <div id="placemat_{player_id}" class="placemat player-{index}" style="color: #{player_color}" data-player="{player_id}">
+        <div class="playerhead">
+          <div id="balloon_{player_id}" class="balloon"></div>
+          <div id="wealth_{player_id}" class="wealth">₤0</div>
+          <div class="playername">{player_name}</div>
+        </div>
+        <div id="cards_{player_id}" class="cards"></div>
+      </div>
+    </div>
+    <!-- END player -->
+  </div>
+</div>
 {OVERALL_GAME_FOOTER}

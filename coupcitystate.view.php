@@ -47,10 +47,11 @@ class view_coupcitystate_coupcitystate extends game_view
 
         // Inflate action block
         $this->page->begin_block($template, 'action');
+        $this->page->begin_block($template, 'action_any');
         foreach ($this->game->actions as $action => $action_ref) {
             $args = $action_ref;
             unset($args['blockers']);
-            $args['blockHtml'] = self::_('Cannot be blocked.');
+            $args['blockHtml'] = self::_('Cannot block.');
             if (count($action_ref['blockers']) > 0) {
                 $card_name = '';
                 foreach ($action_ref['blockers'] as $blocker) {
@@ -63,25 +64,21 @@ class view_coupcitystate_coupcitystate extends game_view
             $args['color'] = '';
             $args['claimHtml'] = '';
             if ($args['character'] > 0) {
-                $card_name =$this->getCharacterName($args['character']);
-                $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('Claim ${card_name}.')));
+                $card_name = $this->getCharacterName($args['character']);
+                $args['claimHtml'] = self::raw($card_name);
+                $args['color'] = $this->game->characters[$args['character']]['color'];
+                $this->page->insert_block('action', $args);
+            } else {
+                $args['claimHtml'] = self::raw('<div class="character-name any">' . self::_('Any character') . '</div>');
+                $this->page->insert_block('action_any', $args);
             }
-            $this->page->insert_block('action', $args);
+            //$this->page->insert_block('action', $args);
         }
-        /*
-        $contessa = $this->game->characters[5];
-        $this->page->insert_block('action', array(
-            'action_id' => 0,
-            'name' => '',
-            'text' => '',
-            'subtext' => $contessa['subtext'],
-            'claimHtml' => $this->getClaimHtml(0, 5)
-        ));
-        */
 
         // Get players & players number
         $players = $this->game->loadPlayersBasicInfos();
-        $players_nbr = count($players);
+        $this->tpl['player_count'] = count($players);
+        $this->tpl['deck_count'] = $this->game->cards->countCardInLocation('deck');
         $spectator = !array_key_exists($current_player_id, $players);
 
         // Compute order starting with current player
@@ -99,12 +96,14 @@ class view_coupcitystate_coupcitystate extends game_view
 
         // Inflate player block
         $this->page->begin_block($template, 'player');
+        $index = 0;
         foreach ($player_order as $player_id) {
             $this->page->insert_block('player', array(
-                  'PLAYER_ID' => $player_id,
-                  'PLAYER_NAME' => $players[$player_id]['player_name'],
-                  'PLAYER_COLOR' => $players[$player_id]['player_color'],
-              ));
+                'index' => $index++,
+                'player_id' => $player_id,
+                'player_name' => $players[$player_id]['player_name'],
+                'player_color' => $players[$player_id]['player_color'],
+            ));
         }
     }
 }

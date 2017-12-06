@@ -83,7 +83,7 @@ $machinestates = array(
     10 => array(
         "name" => "ask",
         "description" => clienttranslate('Wait until all players have responded.'),
-        "descriptionmyturn" => clienttranslate('Stop ${player}\'s ${action}?'),
+        "descriptionmyturn" => clienttranslate('Stop ${player_name2}\'s ${action}?'),
         "type" => "multipleactiveplayer",
         "args" => "argAsk",
         "action" => "stAsk",
@@ -94,7 +94,7 @@ $machinestates = array(
     11 => array(
         "name" => "askBlock",
         "description" => clienttranslate('Wait until all players have responded.'),
-        "descriptionmyturn" => clienttranslate('Stop ${player}\'s block?'),
+        "descriptionmyturn" => clienttranslate('Stop ${player_name2}\'s block?'),
         "type" => "multipleactiveplayer",
         "args" => "argAsk",
         "action" => "stAsk",
@@ -159,6 +159,7 @@ $machinestates = array(
         "description" => '',
         "type" => "game",
         "action" => "stKillCoup",
+        "updateGameProgression" => true,
         "transitions" => array( "killLoss" => 90, "askChooseCard" => 12, "gameEnd" => 99  )
     ),
 
