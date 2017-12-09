@@ -48,6 +48,7 @@
 
 #myactions {
   margin-bottom: 15px;
+  flex: 0 1 auto;
 }
 
 #myactions .actionrowhead {
@@ -60,8 +61,6 @@
 
 #myactions .actionrow {
   display: flex;
-  justify-content: space-around;
-  width: 100%;
 }
 
 #myactions .action {
@@ -387,18 +386,8 @@
   body:not(.logs_on_additional_column) #game_wrap {
     flex-wrap: nowrap;
   }
-  body:not(.logs_on_additional_column) #myactions {
-    display: flex;
-    flex: 0 1 500px;
-    flex-direction: column;
-    margin: 0 5px;
-  }
   body:not(.logs_on_additional_column) #myactions .actionrow {
-    flex-direction: column;
-    flex: 1 1 auto;
-  }
-  body:not(.logs_on_additional_column) #myactions .action {
-    flex: 0 0 100%;
+    display: block;
   }
 }
 
@@ -406,17 +395,7 @@
   #game_wrap {
     flex-wrap: nowrap;
   }
-  #myactions {
-    display: flex;
-    flex: 0 1 500px;
-    flex-direction: column;
-    margin: 0 5px;
-  }
   #myactions .actionrow {
-    flex-direction: column;
-    flex: 1 1 auto;
-  }
-  #myactions .action {
-    flex: 0 0 100%;
+    display: block;
   }
 }
