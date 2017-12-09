@@ -369,10 +369,10 @@ class coupcitystate extends Table
         // Check target
         if ($action_ref['target'] == true) {
             if ($target == 0 || $target == $player_id || $this->cards->countCardInLocation('hand', $target) == 0) {
-                throw new BgaUserException(self::_('Choose an active player before performing this action.'));
+                throw new BgaUserException(self::_('Choose an active player.'));
             }
             if ($action_ref['name'] == 'Steal' && $this->getWealth($target) == 0) {
-                throw new BgaUserException(self::_('Choose an active player with money before performing this action.'));
+                throw new BgaUserException(self::_('Choose an active player with money.'));
             }
             self::setGameStateValue('playerTarget', $target);
         }

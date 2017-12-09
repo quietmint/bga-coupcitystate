@@ -354,6 +354,9 @@ define([
                         dojo.stopEvent(evt);
                         dojo.query('.placemat').removeClass('selected');
                         dojo.addClass(evt.currentTarget, 'selected');
+                        if (this.pendingAction) {
+                            this.onAct(this.pendingAction);
+                        }
                     }
                 }
             },
@@ -394,6 +397,7 @@ define([
             },
 
             onAct: function(evt) {
+                delete this.pendingAction;
                 if (typeof evt == 'number') {
                     // Happens when clicking your own card
                     var action = evt;
@@ -401,7 +405,7 @@ define([
                     // Happens when clicking an action button
                     dojo.stopEvent(evt);
                     var button = evt.currentTarget;
-                    var action = domAttr.get(button, 'data-action');
+                    var action = +domAttr.get(button, 'data-action');
                 }
 
                 if (action > 0 && this.checkAction('act')) {
@@ -424,14 +428,15 @@ define([
                     // Check target
                     if (action_ref.target) {
                         var target = dojo.query('.placemat.selected')[0];
-                        if (target == null) {
-                            this.showMessage(_('Choose an active player before performing this action.'), 'error');
-                            return;
+                        var targetWealth = 0;
+                        if (target != null) {
+                            args.target = +domAttr.get(target, 'data-player');
+                            targetWealth = this.gamedatas.players[args.target].wealth;
                         }
-                        args.target = +domAttr.get(target, 'data-player');
-                        var targetWealth = this.gamedatas.players[args.target].wealth;
-                        if (action_ref.name == 'Steal' && targetWealth == 0) {
-                            this.showMessage(_('Choose an active player with money before performing this action.'), 'error');
+                        if (target == null || (action_ref.name == 'Steal' && targetWealth == 0)) {
+                            this.pendingAction = action;
+                            var msg = action_ref.name == 'Steal' ? _('Choose an active player with money.') : _('Choose an active player.');
+                            this.showMessage(msg, 'info');
                             return;
                         }
                     }
