@@ -66,7 +66,7 @@
 #myactions .action {
   flex: 1 1 100px;
   margin: 2px;
-  background: #fff5;
+  background: rgba(255, 255, 255, 0.33);
   padding: 5px;
   cursor: pointer;
   font-size: 14px;
@@ -116,7 +116,7 @@
   position: relative;
   height: 440px;
   width: 440px;
-  background: #fff5;
+  background: rgba(255, 255, 255, 0.33);
   border-radius: 50%;
   margin: 90px 120px;
   flex: 0 0 auto;
@@ -264,7 +264,7 @@
 }
 
 .placemat.eliminated {
-  border-color: #0005;
+  border-color: rgba(0, 0, 0, 0.33);
   cursor: default;
 }
 
@@ -273,7 +273,7 @@
   margin: 0 5px 10px 0;
   font-size: 18px;
   line-height: 100%;
-  text-shadow: 1px 1px 0 #0005;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.33);
 }
 
 .playerhead .wealth {
@@ -295,7 +295,7 @@
 
 .card {
   border-radius: 10px;
-  box-shadow: 0 1px 2px #0008;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   transform-style: preserve-3d;
   transform-origin: left center;
   width: 100px;
@@ -305,7 +305,7 @@
 
 .card.dead {
   filter: grayscale(75%);
-  box-shadow: 0 1px 2px #0008, inset 0 0 0 65px #0005, inset 0 0 0 4px #0003;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 65px rgba(0, 0, 0, 0.33), inset 0 0 0 4px rgba(0, 0, 0, 0.2);
   color: #222 !important;
 }
 
@@ -317,12 +317,12 @@
   0% {
     transform: translateX(100%) rotateY(-180deg);
     filter: grayscale(0%);
-    box-shadow: -1px 1px 3px #0008;
+    box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5);
   }
   50% {
     transform: translateX(0) rotateY(0);
     filter: grayscale(0%);
-    box-shadow: -1px 1px 3px #0008;
+    box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5);
   }
 }
 
