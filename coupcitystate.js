@@ -145,7 +145,9 @@ define([
                         var card = gamedatas.tableau[i];
                         if (card.location_arg == player_id) {
                             myCards.addToStockWithId(+card.type, +card.id);
-                            dojo.addClass(myCards.getItemDivId(+card.id), 'dead');
+                            var divId = myCards.getItemDivId(+card.id);
+                            dojo.addClass(divId, 'dead');
+                            this.removeTooltip(divId);
                         }
                     }
 
@@ -173,18 +175,13 @@ define([
                 this.setupNotifications();
             },
 
-            setupTooltip: function(element, character) {
-                var character_ref = this.gamedatas.characters[character];
-                var tip = '<div class="character-name" style="background-color: ' + character_ref.color_bright + '">' + character_ref.name + '</div>' +
-                    '<div style="max-width: 200px">' + character_ref.text + ' ' + character_ref.subtext + '</div>';
-                this.addTooltipHtml(element, tip);
-            },
-
             setupCard: function(card_div, card_type_id, card_id) {
                 dojo.addClass(card_div, 'card');
-                var character_ref = this.gamedatas.characters[card_type_id];
                 if (card_type_id > 0) {
-                    this.setupTooltip(card_div.id, card_type_id);
+                    var character_ref = this.gamedatas.characters[card_type_id];
+                    var tip = '<div class="character-name" style="background-color: ' + character_ref.color_bright + '">' + character_ref.name + '</div>' +
+                        '<div style="max-width: 200px">' + character_ref.text + ' ' + character_ref.subtext + '</div>';
+                    this.addTooltipHtml(card_div.id, tip);
                     dojo.place('<div class="card-name">' + character_ref.name + '</div>', card_div.id);
                 }
             },
@@ -588,11 +585,13 @@ define([
                             this.removeUnknownCards(myCards, 1);
                         }
                         myCards.addToStockWithId(cardtype, id);
+                        var divId = myCards.getItemDivId(id);
                         var newClass = 'reveal';
                         if (!n.args.alive) {
                             newClass += ' dead';
+                            this.removeTooltip(divId);
                         }
-                        dojo.addClass(myCards.getItemDivId(id), newClass);
+                        dojo.addClass(divId, newClass);
                     }
                 }
 
