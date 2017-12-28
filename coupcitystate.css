@@ -73,6 +73,11 @@
   line-height: 100%;
   box-sizing: border-box;
   position: relative;
+  transition: background 300ms ease;
+}
+
+#myactions .action:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 #myactions .actionhead {
@@ -157,80 +162,90 @@
 }
 
 .oncircle.player-0 {
-  transform: translateY(-220px);
+  transform: translate(0, -220px);
   z-index: 1;
 }
 
 .circle-6 .oncircle.player-0 {
-  transform: translateY(-250px);
+  transform: translate(0, -250px);
 }
 
 .circle-6 .oncircle.player-1 {
-  transform: rotate(-30deg) translate(250px) rotate(30deg);
+  /* transform: rotate(-30deg) translate(250px) rotate(30deg); */
+  transform: translate(216px, -125px);
   align-items: flex-end;
   z-index: 2;
 }
 
 .circle-6 .oncircle.player-2 {
-  transform: rotate(30deg) translate(250px) rotate(-30deg);
+  /* transform: rotate(30deg) translate(250px) rotate(-30deg); */
+  transform: translate(216px, 125px);
   align-items: flex-start;
   z-index: 2;
 }
 
 .circle-6 .oncircle.player-3 {
-  transform: translateY(250px);
+  transform: translate(0, 250px);
   z-index: 3;
 }
 
 .circle-6 .oncircle.player-4 {
-  transform: rotate(150deg) translate(250px) rotate(-150deg);
+  /* transform: rotate(150deg) translate(250px) rotate(-150deg); */
+  transform: translate(-216px, 125px);
   align-items: flex-start;
   z-index: 2;
 }
 
 .circle-6 .oncircle.player-5 {
-  transform: rotate(210deg) translate(250px) rotate(-210deg);
+  /* transform: rotate(210deg) translate(250px) rotate(-210deg); */
+  transform: translate(-216px, -125px);
   align-items: flex-end;
   z-index: 2;
 }
 
 .circle-5 .oncircle.player-1 {
-  transform: rotate(-18deg) translate(220px) rotate(18deg);
+  /* transform: rotate(-18deg) translate(220px) rotate(18deg); */
+  transform: translate(209px, -68px);
   align-items: flex-end;
 }
 
 .circle-5 .oncircle.player-2 {
-  transform: rotate(54deg) translate(220px) rotate(-54deg);
+  /* transform: rotate(54deg) translate(220px) rotate(-54deg); */
+  transform: translate(129px, 178px);
 }
 
 .circle-5 .oncircle.player-3 {
-  transform: rotate(126deg) translate(220px) rotate(-126deg);
+  /* transform: rotate(126deg) translate(220px) rotate(-126deg); */
+  transform: translate(-129px, 178px);
 }
 
 .circle-5 .oncircle.player-4 {
-  transform: rotate(198deg) translate(220px) rotate(-198deg);
+  /* transform: rotate(198deg) translate(220px) rotate(-198deg); */
+  transform: translate(-209px, -68px);
   align-items: flex-end;
 }
 
 .circle-4 .oncircle.player-1 {
-  transform: translate(220px);
+  transform: translate(220px, 0);
 }
 
 .circle-4 .oncircle.player-2,
 .circle-2 .oncircle.player-1 {
-  transform: translateY(220px);
+  transform: translate(0, 220px);
 }
 
 .circle-4 .oncircle.player-3 {
-  transform: translate(-220px);
+  transform: translate(-220px, 0);
 }
 
 .circle-3 .oncircle.player-1 {
-  transform: rotate(30deg) translate(220px) rotate(-30deg);
+  /* transform: rotate(30deg) translate(220px) rotate(-30deg); */
+  transform: translate(190px, 110px);
 }
 
 .circle-3 .oncircle.player-2 {
-  transform: rotate(150deg) translate(220px) rotate(-150deg);
+  /* transform: rotate(150deg) translate(220px) rotate(-150deg); */
+  transform: translate(-190px, 110px);
 }
 
 .placemat {
@@ -305,12 +320,28 @@
 
 .card.dead {
   filter: grayscale(75%);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 65px rgba(0, 0, 0, 0.33), inset 0 0 0 4px rgba(0, 0, 0, 0.2);
-  color: #222 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 65px rgba(0, 0, 0, 0.33), inset 0 0 0 5px rgba(0, 0, 0, 0.33);
+}
+
+.card.dead::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -9px;
+  left: 48px;
+  width: 5px;
+  height: 145px;
+  border-radius: 2px;
+  transform: rotate(-37deg);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .card.reveal {
   animation: reveal-flip 2s ease-out;
+}
+
+.card.reveal::after {
+  animation: reveal-flip-after 2s ease-out;
 }
 
 @keyframes reveal-flip {
@@ -323,6 +354,15 @@
     transform: translateX(0) rotateY(0);
     filter: grayscale(0%);
     box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@keyframes reveal-flip-after {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: transparent;
   }
 }
 
@@ -357,6 +397,7 @@
   font-size: 14px;
   line-height: 100%;
   min-width: 20px;
+  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.5);
 }
 
 .balloon:empty {
