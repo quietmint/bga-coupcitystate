@@ -722,12 +722,12 @@ class coupcitystate extends Table
     public function stRoundEnd()
     {
         $players = self::getCollectionFromDb('SELECT player_id, player_name, player_score, player_eliminated FROM player ORDER BY player_no');
-        $active = false;
+        $active = 0;
         $scores = array();
         foreach ($players as $player_id => $player) {
             $scores[$player_id] = $player['player_score'];
             if ($player['player_eliminated'] == 0) {
-                $active = true;
+                $active++;
             }
         }
 
@@ -736,7 +736,7 @@ class coupcitystate extends Table
 
         // Game over?
         $requiredScore = self::getGameStateValue('requiredScore');
-        $gameOver = !$active || max(array_values($scores)) >= $requiredScore;
+        $gameOver = $active <= 1 || max(array_values($scores)) >= $requiredScore;
         foreach ($scores as $player_id => $score) {
             if ($score >= $requiredScore) {
                 $gameOver = true;
