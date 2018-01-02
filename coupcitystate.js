@@ -424,8 +424,15 @@ define([
 
                     // Check target
                     if (action_ref.target) {
-                        var target = dojo.query('.placemat.selected')[0];
                         var targetWealth = 0;
+                        var target = dojo.query('.placemat.selected')[0];
+                        // Automatic targeting with 2 active players
+                        if (target == null) {
+                            var possibleTargets = dojo.query('.placemat:not(.eliminated):not(#placemat_' + this.player_id + ')');
+                            if (possibleTargets.length == 1) {
+                                target = possibleTargets[0];
+                            }
+                        }
                         if (target != null) {
                             args.target = +domAttr.get(target, 'data-player');
                             targetWealth = this.gamedatas.players[args.target].wealth;
