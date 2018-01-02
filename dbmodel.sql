@@ -16,5 +16,6 @@ CREATE TABLE IF NOT EXISTS `card` (
    PRIMARY KEY (`card_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
-ALTER TABLE `player` ADD `player_wealth` INT NOT NULL DEFAULT '0';
+ALTER TABLE `player` ADD `player_wealth` INT NOT NULL DEFAULT 0;
+ALTER TABLE `player` ADD `round_eliminated` INT NOT NULL DEFAULT 0;
 ALTER TABLE `player` ADD `balloon` MEDIUMTEXT;

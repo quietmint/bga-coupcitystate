@@ -295,12 +295,22 @@
   float: right;
 }
 
-.playerhead .playername {
+.playerhead .player-name {
   color: inherit;
 }
 
-.placemat.eliminated .playername {
+.eliminated .player-name {
   text-decoration: line-through;
+}
+
+.player-board {
+  transition: background-color 1s ease;
+}
+
+.player-board.eliminated {
+  background-color: transparent;
+  border: 2px dashed rgba(0, 0, 0, 0.33) !important;
+  padding: 3px 1px;
 }
 
 .cards {

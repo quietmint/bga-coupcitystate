@@ -92,9 +92,6 @@ define([
             */
 
             setup: function(gamedatas) {
-                // Current player
-                dojo.addClass('placemat_' + gamedatas.turn, 'active');
-
                 // Player actions
                 if (!this.isSpectator) {
                     dojo.addClass('placemat_' + this.player_id, 'mine');
@@ -110,26 +107,10 @@ define([
 
                 this.tableau = {};
                 for (var player_id in gamedatas.players) {
-                    var player = gamedatas.players[player_id];
-                    var handCount = gamedatas.handCounts[player_id] || 0;
+                    // Add coin counter
+                    dojo.place('<span id="panel_wealth_' + player_id + '"></span>', 'player_score_' + player_id, 'before');
 
-                    // Eliminated?
-                    if (player.eliminated) {
-                        dojo.addClass('placemat_' + player_id, 'eliminated');
-                    }
-
-                    // Balloon?
-                    if (player.balloon) {
-                        this.notif_balloon({
-                            args: player.balloon
-                        }, true);
-                    }
-
-                    // Coin count
-                    $('wealth_' + player_id).innerHTML = '₤' + player.wealth;
-                    dojo.place('<span id="panel_wealth_' + player_id + '">₤' + player.wealth + ' • </span>', 'player_score_' + player_id, 'before');
-
-                    // Setup my cards
+                    // Setup stock
                     var myCards = new ebg.stock();
                     myCards.create(this, $('cards_' + player_id), this.cardwidth, this.cardheight);
                     myCards.image_items_per_row = 1;
@@ -139,37 +120,14 @@ define([
                     for (var i in gamedatas.characters) {
                         myCards.addItemType(i, i, g_gamethemeurl + 'img/cards.jpg', i);
                     }
-
-                    // Add visible cards (dead)
-                    for (var i in gamedatas.tableau) {
-                        var card = gamedatas.tableau[i];
-                        if (card.location_arg == player_id) {
-                            myCards.addToStockWithId(+card.type, +card.id);
-                            var divId = myCards.getItemDivId(+card.id);
-                            dojo.addClass(divId, 'dead');
-                            this.removeTooltip(divId);
-                        }
-                    }
-
-                    // Add secret cards
                     if (player_id == this.player_id) {
-                        for (var i in gamedatas.hand) {
-                            var card = gamedatas.hand[i];
-                            myCards.addToStockWithId(+card.type, +card.id);
-                        }
                         dojo.connect(myCards, 'onChangeSelection', this, 'onSelectCard');
-                    } else {
-                        this.addUnknownCards(myCards, handCount);
-                    }
-
-                    // Increase width if we have more than 2 cards
-                    var total = myCards.getAllItems().length;
-                    if (total > 2) {
-                        domStyle.set('cards_' + player_id, 'width', '270px');
-                        myCards.setOverlap(50, 0);
                     }
                     this.tableau[player_id] = myCards;
                 }
+
+                // Reset for new round
+                this.roundBegin(gamedatas);
 
                 // Setup game notifications to handle (see "setupNotifications" method below)
                 this.setupNotifications();
@@ -183,6 +141,87 @@ define([
                         '<div style="max-width: 200px">' + character_ref.text + ' ' + character_ref.subtext + '</div>';
                     this.addTooltipHtml(card_div.id, tip);
                     dojo.place('<div class="card-name">' + character_ref.name + '</div>', card_div.id);
+                }
+            },
+
+            roundBegin: function(gamedatas) {
+                // Reset current player
+                dojo.query('.placemat.active').removeClass('active');
+                dojo.addClass('placemat_' + gamedatas.turn, 'active');
+
+                // Reset balloons
+                dojo.query('.balloon').forEach(dojo.empty);
+
+                // Reset deck count
+                $('deckcount').innerText = 'Deck (' + gamedatas.deckCount + ')';
+
+                for (var player_id in gamedatas.players) {
+                    var player = gamedatas.players[player_id];
+
+                    // Reset elimination status
+                    if (+player.eliminated || +player.round_eliminated) {
+                        this.notif_eliminate({
+                            args: {
+                                player_id: player_id
+                            }
+                        }, true);
+                    } else {
+                        dojo.removeClass('placemat_' + player_id, 'eliminated');
+                        dojo.removeClass('overall_player_board_' + player_id, 'eliminated');
+                    }
+
+                    // Reset balloon
+                    if (player.balloon) {
+                        this.notif_balloon({
+                            args: player.balloon
+                        }, true);
+                    }
+
+                    // Reset wealth
+                    this.notif_wealth({
+                        args: {
+                            player_id: player_id,
+                            wealth: player.wealth
+                        }
+                    });
+
+                    // Reset cards
+                    myCards = this.tableau[player_id];
+                    myCards.removeAll();
+
+                    // Add visible cards (dead)
+                    if (player.tableau) {
+                        for (var i in player.tableau) {
+                            var card = player.tableau[i];
+                            myCards.addToStockWithId(+card.type, +card.id, 'deck');
+                            var divId = myCards.getItemDivId(+card.id);
+                            dojo.addClass(divId, 'dead');
+                            this.removeTooltip(divId);
+                        }
+                    }
+
+                    // Add secret cards
+                    if (player_id == this.player_id) {
+                        if (gamedatas.hand) {
+                            for (var i in gamedatas.hand) {
+                                var card = gamedatas.hand[i];
+                                myCards.addToStockWithId(+card.type, +card.id, 'deck');
+                            }
+                        }
+                    } else {
+                        var handCount = +player.handCount || 0;
+                        this.addUnknownCards(myCards, handCount, 'deck');
+                    }
+
+                    // Increase width if we have more than 2 cards
+                    var total = myCards.getAllItems().length;
+                    if (total > 2) {
+                        domStyle.set('cards_' + player_id, 'width', '270px');
+                        myCards.setOverlap(50, 0);
+                    } else {
+                        domStyle.set('cards_' + player_id, 'width', null);
+                        myCards.setOverlap(0, 0);
+                    }
                 }
             },
 
@@ -222,6 +261,7 @@ define([
                 if (!this.isSpectator) {
                     clearInterval(window.passIntervalId);
                     delete window.passIntervalId;
+                    delete window.passIntervalSeconds;
                     if (stateName == 'playerStart') {
                         dojo.query('.placemat.selected').removeClass('selected');
                     }
@@ -238,7 +278,12 @@ define([
                     switch (stateName) {
                         case 'ask':
                         case 'askBlock':
-                            if (!window.passIntervalId && typeof g_replayFrom == 'undefined') {
+                            var dialogVisible = false;
+                            var dialog = dojo.query('.dijitDialogUnderlayWrapper');
+                            if (dialog.length > 0) {
+                                dialogVisible = dialog[0].style.display != 'none';
+                            }
+                            if (!window.passIntervalId && !dialogVisible && typeof g_replayFrom == 'undefined') {
                                 // Auto pass after 10 - 15 seconds
                                 clearInterval(window.passIntervalId);
                                 window.passIntervalSeconds = getRandomInt(10, 15);
@@ -257,6 +302,7 @@ define([
                                         }
                                         clearInterval(window.passIntervalId);
                                         delete window.passIntervalId;
+                                        delete window.passIntervalSeconds;
                                     }
                                 }, 1000);
                                 console.info('Starting auto-pass timer (' + window.passIntervalSeconds + ' seconds)');
@@ -500,42 +546,62 @@ define([
 
             */
             setupNotifications: function() {
+                dojo.subscribe('roundBegin', this, 'notif_roundBegin');
                 dojo.subscribe('tableInfosChanged', this, 'notif_tableInfosChanged');
-                dojo.subscribe('score', this, 'notif_score');
+                dojo.subscribe('eliminate', this, 'notif_eliminate');
+                dojo.subscribe('scores', this, 'notif_scores');
 
                 dojo.subscribe('wealthInstant', this, 'notif_wealth');
                 dojo.subscribe('wealth', this, 'notif_wealth');
-                this.notifqueue.setSynchronous('wealth', 2500);
+                this.notifqueue.setSynchronous('wealth', 2000);
 
                 dojo.subscribe('balloonInstant', this, 'notif_balloon');
                 dojo.subscribe('balloon', this, 'notif_balloon');
-                this.notifqueue.setSynchronous('balloon', 2500);
+                this.notifqueue.setSynchronous('balloon', 2000);
 
                 dojo.subscribe('revealInstant', this, 'notif_reveal');
                 dojo.subscribe('reveal', this, 'notif_reveal');
-                this.notifqueue.setSynchronous('reveal', 2500);
+                this.notifqueue.setSynchronous('reveal', 2000);
 
                 dojo.subscribe('discardInstant', this, 'notif_discard');
                 dojo.subscribe('discard', this, 'notif_discard');
-                this.notifqueue.setSynchronous('discard', 2500);
+                this.notifqueue.setSynchronous('discard', 2000);
 
                 dojo.subscribe('drawInstant', this, 'notif_draw');
                 dojo.subscribe('draw', this, 'notif_draw');
-                this.notifqueue.setSynchronous('draw', 2500);
+                this.notifqueue.setSynchronous('draw', 2000);
+            },
+
+            notif_roundBegin: function(n) {
+                this.roundBegin(n.args);
             },
 
             notif_tableInfosChanged: function(n) {
                 // Detect player elimination
                 if (n.args.reload_reason == 'playerElimination') {
-                    dojo.addClass('placemat_' + n.args.who_quits, 'eliminated');
+                    this.notif_eliminate({
+                        args: {
+                            player_id: n.args.who_quits
+                        }
+                    });
                 }
             },
 
-            notif_score: function(n) {
+            notif_eliminate: function(n, fromInit) {
                 var player_id = n.args.player_id;
-                var score = n.args.score || 0;
-                this.gamedatas.players[player_id].score = score;
-                $('player_score_' + player_id).innerText = score;
+                dojo.addClass('placemat_' + player_id, 'eliminated');
+                dojo.addClass('overall_player_board_' + player_id, 'eliminated');
+                if (!fromInit) {
+                    n.args.wealth = 0;
+                    this.notif_wealth(n);
+                }
+            },
+
+            notif_scores: function(n) {
+                var scores = n.args.scores;
+                for (player_id in scores) {
+                    this.scoreCtrl[player_id].toValue(scores[player_id]);
+                }
             },
 
             notif_wealth: function(n) {
@@ -550,7 +616,7 @@ define([
                 }
             },
 
-            notif_balloon: function(n, keep) {
+            notif_balloon: function(n, fromInit) {
                 var player_id = n.args.player_id;
                 if (player_id) {
                     // Styleize player/character names like notifications
@@ -558,7 +624,7 @@ define([
                     var isNo = n.args.balloon == 'no';
 
                     // Clear all balloons
-                    if (!keep && !isNo) {
+                    if (!fromInit && !isNo) {
                         dojo.query('.balloon').forEach(dojo.empty);
                     }
 
@@ -590,8 +656,8 @@ define([
                         var cardtype = +n.args.card_types[i];
                         if (!this.hasCard(myCards, id)) {
                             this.removeUnknownCards(myCards, 1);
+                            myCards.addToStockWithId(cardtype, id);
                         }
-                        myCards.addToStockWithId(cardtype, id);
                         var divId = myCards.getItemDivId(id);
                         var newClass = 'reveal';
                         if (!n.args.alive) {

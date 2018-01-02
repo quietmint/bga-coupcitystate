@@ -37,7 +37,7 @@
         <div class="playerhead">
           <div id="balloon_{player_id}" class="balloon"></div>
           <div id="wealth_{player_id}" class="wealth">₤0</div>
-          <div class="playername">{player_name}</div>
+          <div class="player-name">{player_name}</div>
         </div>
         <div id="cards_{player_id}" class="cards"></div>
       </div>

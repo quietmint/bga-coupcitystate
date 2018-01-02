@@ -62,10 +62,10 @@ $machinestates = array(
     ),
 
     2 => array(
-        "name" => "newHand",
+        "name" => "roundBegin",
         "description" => '',
         "type" => "game",
-        "action" => "stNewHand",
+        "action" => "stRoundBegin",
         "updateGameProgression" => true,
         "transitions" => array( "" => 3 )
     ),
@@ -77,7 +77,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "action" => "stPlayerStart",
         "possibleactions" => array( "act" ),
-        "transitions" => array( "ask" => 10, "execute" => 80, "zombiePass" => 98 )
+        "transitions" => array( "ask" => 10, "execute" => 80, "zombiePass" => 97 )
     ),
 
     10 => array(
@@ -159,8 +159,7 @@ $machinestates = array(
         "description" => '',
         "type" => "game",
         "action" => "stKillCoup",
-        "updateGameProgression" => true,
-        "transitions" => array( "killLoss" => 90, "askChooseCard" => 12, "gameEnd" => 99  )
+        "transitions" => array( "killLoss" => 90, "askChooseCard" => 12, "roundEnd" => 98  )
     ),
 
     90 => array(
@@ -168,16 +167,25 @@ $machinestates = array(
         "description" => '',
         "type" => "game",
         "action" => "stKillLoss",
-        "transitions" => array( "playerEnd" => 98, "askChooseCard" => 12 )
+        "transitions" => array( "playerEnd" => 97, "askChooseCard" => 12 )
     ),
 
-    98 => array(
+    97 => array(
         "name" => "playerEnd",
         "description" => '',
         "type" => "game",
         "action" => "stPlayerEnd",
         "updateGameProgression" => true,
-        "transitions" => array( "playerStart" => 3, "gameEnd" => 99 )
+        "transitions" => array( "playerStart" => 3, "roundEnd" => 98 )
+    ),
+
+    98 => array(
+        "name" => "roundEnd",
+        "description" => '',
+        "type" => "game",
+        "action" => "stRoundEnd",
+        "updateGameProgression" => true,
+        "transitions" => array( "roundBegin" => 2, "gameEnd" => 99 )
     ),
 
     // Final state.

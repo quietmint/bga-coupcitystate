@@ -33,6 +33,7 @@ class coupcitystate extends Table
         self::initGameStateLabels(array(
             'action' => 10,
             'reasonChoose' => 11,
+            'round' => 12,
             'playerTurn' => 20,
             'playerChallenge' => 21,
             'playerBlock' => 22,
@@ -42,7 +43,8 @@ class coupcitystate extends Table
             'cardReveal' => 31,
             'cardKill' => 32,
             'cardCoup' => 33,
-            'typeBlock' => 40
+            'typeBlock' => 40,
+            'requiredScore' => 100
         ));
 
         $this->cards = self::getNew('module.common.deck');
@@ -118,6 +120,10 @@ class coupcitystate extends Table
             }
         }
         $this->cards->createCards($cards, 'deck');
+        self::notifyAllPlayers('message', clienttranslate('The deck has ${size} cards with ${copies} copies of each character.'), array(
+            'size' => 15,
+            'copies' => 3
+        ));
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -134,30 +140,14 @@ class coupcitystate extends Table
     */
     protected function getAllDatas()
     {
-        $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
-        $players = self::getCollectionFromDb('SELECT player_id id, player_score score, player_wealth wealth, balloon FROM player');
-        $spectator = !array_key_exists($current_player_id, $players);
-        foreach ($players as $player_id => $player) {
-            if ($player['balloon']) {
-                $players[$player_id]['balloon'] = unserialize($player['balloon']);
-            }
-        }
+        $player_id = self::getCurrentPlayerId();
+        $public = $this->getPublicData();
+        $private = $this->getPrivateData($player_id);
 
-        $result = array(
-            'players' => $players,
+        return array(
             'actions' => $this->actions,
-            'characters' => $this->characters,
-            'turn' => self::getGameStateValue('playerTurn'),
-            'tableau' => $this->cards->getCardsInLocation('tableau'),
-            'handCounts' => $this->cards->countCardsByLocationArgs('hand')
-        );
-
-        // Visible cards in my hand
-        if (!$spectator) {
-            $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
-        }
-
-        return $result;
+            'characters' => $this->characters
+        ) + $public + $private;
     }
 
     /*
@@ -172,12 +162,26 @@ class coupcitystate extends Table
     */
     public function getGameProgression()
     {
-        $cardValue = 100 / ((self::getPlayersNumber() * 2) - 1);
+        // Calculate progress for prior rounds
+        $requiredScore = self::getGameStateValue('requiredScore');
+        $score = 0;
+        if ($requiredScore > 1) {
+            $score = self::getUniqueValueFromDB('SELECT MAX(player_score) FROM player');
+        }
+        $scoreProgress = $score / $requiredScore * 100;
+
+        // Calculate progress for current round
+        $tableauCount = $this->cards->countCardInLocation('tableau');
+        $handCount = $this->cards->countCardInLocation('hand');
+        $cardCount = $tableauCount + $handCount;
+        $cardValue = $cardCount == 0 ? 0 : 100 / $cardCount;
         $coinValue = $cardValue / 10;
-        $cards = $this->cards->countCardInLocation('tableau');
         $coins = min(9, self::getUniqueValueFromDB('SELECT MAX(player_wealth) FROM player'));
-        $progress = min(100, $cardValue * $cards + $coinValue * $coins);
-        return floor($progress);
+        $roundProgress = min(100, $cardValue * $tableauCount + $coinValue * $coins);
+
+        // Calculate total progress
+        $progress = $scoreProgress + ($roundProgress / $requiredScore);
+        return floor(min(100, $progress));
     }
 
 
@@ -189,9 +193,48 @@ class coupcitystate extends Table
         In this space, you can put any utility methods useful for your game logic
     */
 
+    public function getPublicData()
+    {
+        $players = self::getCollectionFromDb('SELECT player_id id, player_score score, player_wealth wealth, player_eliminated eliminated, round_eliminated, balloon FROM player ORDER BY player_no');
+        foreach ($players as $player_id => $player) {
+            if ($player['balloon']) {
+                $players[$player_id]['balloon'] = unserialize($player['balloon']);
+            }
+            $players[$player_id]['handCount'] = $this->cards->countCardInLocation('hand', $player_id);
+            $players[$player_id]['tableau'] = $this->cards->getCardsInLocation('tableau', $player_id);
+        }
+
+        return array(
+            'players' => $players,
+            'turn' => self::getGameStateValue('playerTurn'),
+            'deckCount' => $this->cards->countCardInLocation('deck')
+        );
+    }
+
+    public function getPrivateData($player_id)
+    {
+        $players = self::loadPlayersBasicInfos();
+        $spectator = !array_key_exists($player_id, $players);
+        $result = array();
+        if (!$spectator) {
+            $result['hand'] = $this->cards->getCardsInLocation('hand', $player_id);
+        }
+        return $result;
+    }
+
     public function getName($player_id)
     {
         return self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$player_id");
+    }
+
+    public function getPlayerIds($skip=null)
+    {
+        $sql = 'SELECT player_id FROM player WHERE round_eliminated = 0 AND player_eliminated = 0 AND player_zombie = 0';
+        if ($skip != null) {
+            $sql .= " AND player_id != $skip";
+        }
+        $sql .= ' ORDER BY player_no';
+        return self::getObjectListFromDB($sql, true);
     }
 
     public function getCard($card_id, $location=null, $location_arg=0)
@@ -300,11 +343,37 @@ class coupcitystate extends Table
                 'player_id' => $player_id,
                 'wealth' => 0
             ));
-            self::DbQuery('UPDATE player SET player_wealth = 0 WHERE player_eliminated = 1');
-            self::eliminatePlayer($player_id);
+            $this->eliminate($player_id);
             return true;
         }
         return false;
+    }
+
+    public function eliminate($player_id, $forever=false)
+    {
+        // Reveal cards in hand
+        $hand = $this->cards->getCardsInLocation('hand', $player_id);
+        if (count($hand) > 0) {
+            $ids = array();
+            $types = array();
+            foreach ($hand as $card) {
+                $ids[] = $card['id'];
+                $types[] = $card['type'];
+            }
+            $this->cards->moveCards($ids, 'tableau', $player_id);
+            self::notifyAllPlayers('revealInstant', '', array(
+              'player_id' => $player_id,
+              'card_ids' => $ids,
+              'card_types' => $types
+          ));
+        }
+        self::DbQuery("UPDATE player SET round_eliminated = 1, player_wealth = 0 WHERE player_id = $player_id");
+        self::notifyAllPlayers('eliminate', '', array(
+            'player_id' => $player_id
+        ));
+        if ($forever) {
+            self::eliminatePlayer($player_id);
+        }
     }
 
     public function checkWin()
@@ -312,32 +381,23 @@ class coupcitystate extends Table
         // Eliminate new zombies
         $newZombies = self::getObjectListFromDB('SELECT player_id FROM player WHERE player_eliminated = 0 AND player_zombie = 1', true);
         if (count($newZombies) > 0) {
-            self::DbQuery('UPDATE player SET player_wealth = 0 WHERE player_eliminated = 0 AND player_zombie = 1');
             foreach ($newZombies as $zombie_id) {
-                $hand = $this->getCardIds('hand', $zombie_id);
-                if (count($hand) > 0) {
-                    self::notifyAllPlayers('revealInstant', '', array(
-                        'player_id' => $zombie_id,
-                        'card_ids' => $hand
-                    ));
-                }
-                self::notifyAllPlayers('wealthInstant', '', array(
-                    'player_id' => $zombie_id,
-                    'wealth' => 0
-                ));
-                self::eliminatePlayer($zombie_id);
+                $this->eliminate($zombie_id, true);
             }
         }
 
         // Count active players
-        $winner = self::getObjectListFromDB('SELECT player_id FROM player WHERE player_eliminated = 0 AND player_zombie = 0', true);
-        if (count($winner) == 1) { // win
-            self::notifyAllPlayers('score', '', array(
-                'player_id' => $winner[0],
-                'score' => 1
-            ));
-            self::DbQuery("UPDATE player SET player_score = 1 WHERE player_id=$winner[0]");
-            $this->gamestate->nextState('gameEnd');
+        $players = $this->getPlayerIds();
+        if (count($players) == 1) { // win
+            $requiredScore = self::getGameStateValue('requiredScore');
+            if ($requiredScore > 1) {
+                self::notifyAllPlayers('message', clienttranslate('End of round ${round}: ${player_name} wins!'), array(
+                    'player_name' => $this->getName($players[0]),
+                    'round' => self::getGameStateValue('round')
+                ));
+            }
+            self::DbQuery("UPDATE player SET player_score = player_score + 1 WHERE player_id = $players[0]");
+            $this->gamestate->nextState('roundEnd');
             return true;
         }
         return false;
@@ -620,32 +680,92 @@ class coupcitystate extends Table
         The action method of state X is called everytime the current game state is set to X.
     */
 
-    public function stNewHand()
+    public function stRoundBegin()
     {
-        // Take back all cards (from any location => null) to deck
+        // Increment round counter
+        $requiredScore = self::getGameStateValue('requiredScore');
+        $round = self::getGameStateValue('round') + 1;
+        self::setGameStateValue('round', $round);
+
+        // Reset active players
+        self::DbQuery('UPDATE player SET player_wealth = 0, round_eliminated = 0, balloon = NULL WHERE player_eliminated = 0');
+        $players = $this->getPlayerIds();
+        $playerCount = count($players);
+
+        // Shuffle cards
         $this->cards->moveAllCardsInLocation(null, 'deck');
         $this->cards->shuffle('deck');
 
-        // Give money to each player
-        $wealth = self::getPlayersNumber() == 2 ? 1 : 2;
-        self::DbQuery("UPDATE player SET player_wealth = $wealth, balloon = NULL");
-
-        // Deal 2 cards to each player
-        $players = self::loadPlayersBasicInfos();
-        foreach ($players as $player_id => $player) {
-            $hand = $this->cards->pickCards(2, 'deck', $player_id);
-            self::notifyPlayer($player_id, 'newHand', '', array(
-                'cards' => $hand,
-                'wealth' => $wealth
-            ));
+        // Give money and cards to active players
+        $wealth = $playerCount == 2 ? 1 : 2;
+        self::DbQuery("UPDATE player SET player_wealth = $wealth WHERE player_eliminated = 0");
+        foreach ($players as $player_id) {
+            $this->cards->pickCards(2, 'deck', $player_id);
             self::incStat($wealth, 'wealthIn', $player_id);
         }
 
-        self::notifyAllPlayers('message', clienttranslate('The game begins with ${count} cards remaining in the deck.'), array(
-            'count' => $this->cards->countCardInLocation('deck')
-        ));
-
+        // Send data to all players
+        $public = $this->getPublicData();
+        foreach ($public['players'] as $player_id => $player) {
+            $private = $this->getPrivateData($player_id);
+            self::notifyPlayer($player_id, 'roundBegin', '', $public + $private);
+        }
+        if ($requiredScore > 1) {
+            self::notifyAllPlayers('message', clienttranslate('Begin round ${round}. The game ends when someone wins ${count} rounds.'), array(
+                'round' => $round,
+                'count' => $requiredScore
+            ));
+        }
         $this->gamestate->nextState('');
+    }
+
+    public function stRoundEnd()
+    {
+        $players = self::getCollectionFromDb('SELECT player_id, player_name, player_score, player_eliminated FROM player ORDER BY player_no');
+        $active = false;
+        $scores = array();
+        foreach ($players as $player_id => $player) {
+            $scores[$player_id] = $player['player_score'];
+            if ($player['player_eliminated'] == 0) {
+                $active = true;
+            }
+        }
+
+        // Send current scores
+        self::notifyAllPlayers('scores', '', array( 'scores' => $scores ));
+
+        // Game over?
+        $requiredScore = self::getGameStateValue('requiredScore');
+        $gameOver = !$active || max(array_values($scores)) >= $requiredScore;
+        foreach ($scores as $player_id => $score) {
+            if ($score >= $requiredScore) {
+                $gameOver = true;
+                break;
+            }
+        }
+
+        // Display score table?
+        if ($requiredScore > 1) {
+            $tableWindow = array(
+                'id' => 'finalScoring',
+                'title' => $gameOver ? clienttranslate('End of game') : clienttranslate('End of round')
+            );
+            $headerRow = array();
+            $scoreRow = array();
+            foreach ($players as $player_id => $player) {
+                $headerRow[] = array(
+                    'str' => '${player_name}',
+                    'args' => array('player_name' => $player['player_name']),
+                    'type' => 'header'
+                );
+                $scoreRow[] = $scores[$player_id];
+            }
+            $tableWindow['table'] = array($headerRow, $scoreRow);
+            $this->notifyAllPlayers('tableWindow', '', $tableWindow);
+        }
+
+        // Go to next state
+        $this->gamestate->nextState($gameOver ? 'gameEnd' : 'roundBegin');
     }
 
     public function stPlayerStart()
@@ -678,8 +798,12 @@ class coupcitystate extends Table
         if (!$this->checkWin()) {
             // We can't trust the active player
             // Use saved state value to determine next player
+            $players = $this->getPlayerIds();
             $playerTurn = self::getGameStateValue('playerTurn');
-            $nextPlayer = self::getPlayerAfter($playerTurn);
+            $nextPlayer = $playerTurn;
+            do {
+                $nextPlayer = self::getPlayerAfter($nextPlayer);
+            } while (!in_array($nextPlayer, $players));
             $this->gamestate->changeActivePlayer($nextPlayer);
             $this->gamestate->nextState('playerStart');
         }
@@ -687,13 +811,14 @@ class coupcitystate extends Table
 
     public function stAsk()
     {
-        // Activate all but one
-        $this->gamestate->setAllPlayersMultiactive();
         $skip = self::getGameStateValue('playerBlock');
         if ($skip == 0) {
             $skip = self::getGameStateValue('playerTurn');
         }
-        $this->gamestate->setPlayerNonMultiactive($skip, 'execute');
+        // Activate other players
+        self::DbQuery("UPDATE player SET player_is_multiactive = 0");
+        $players = $this->getPlayerIds($skip);
+        $this->gamestate->setPlayersMultiactive($players, 'execute');
     }
 
     public function stChallenge()
@@ -842,7 +967,7 @@ class coupcitystate extends Table
                 'player_name' => $this->getName($player),
                 'card_name' => $oldCard['name'],
                 'card_ids' => array($oldCard['id']),
-                'deck_count' => $deckCount - 1
+                'deck_count' => $deckCount + 1
             ));
             self::notifyPlayer($player, 'drawInstant', '', array(
                 'player_id' => $player,
@@ -1097,6 +1222,9 @@ class coupcitystate extends Table
 
         if ($from_version <= 1709251328) {
             self::DbQuery('ALTER TABLE `player` ADD `balloon` MEDIUMTEXT');
+        }
+        if ($from_version <= 1712281820) {
+            self::DbQuery('ALTER TABLE `player` ADD `round_eliminated` INT NOT NULL DEFAULT 0');
         }
     }
 }
