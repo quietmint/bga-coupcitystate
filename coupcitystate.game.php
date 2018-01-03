@@ -397,6 +397,9 @@ class coupcitystate extends Table
                 ));
             }
             self::DbQuery("UPDATE player SET player_score = player_score + 1 WHERE player_id = $players[0]");
+
+            // Winner starts next round (if any)
+            $this->gamestate->changeActivePlayer($players[0]);
             $this->gamestate->nextState('roundEnd');
             return true;
         }
@@ -816,7 +819,7 @@ class coupcitystate extends Table
             $skip = self::getGameStateValue('playerTurn');
         }
         // Activate other players
-        self::DbQuery("UPDATE player SET player_is_multiactive = 0");
+        self::DbQuery('UPDATE player SET player_is_multiactive = 0');
         $players = $this->getPlayerIds($skip);
         $this->gamestate->setPlayersMultiactive($players, 'execute');
     }
