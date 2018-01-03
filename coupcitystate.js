@@ -16,19 +16,19 @@
  */
 
 define([
-        "dojo", "dojo/_base/declare", "dojo/dom-attr", "dojo/dom-style",
+        "dojo", "dojo/_base/declare", "dojo/dom-attr",
         "ebg/core/gamegui",
         "ebg/counter",
         "ebg/stock"
     ],
-    function(dojo, declare, domAttr, domStyle) {
+    function(dojo, declare, domAttr) {
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
         return declare("bgagame.coupcitystate", ebg.core.gamegui, {
             constructor: function() {
-                this.cardwidth = 100;
+                this.cardwidth = 90;
                 this.cardheight = 128;
 
                 function argsFilter(args) {
@@ -114,6 +114,7 @@ define([
                     var myCards = new ebg.stock();
                     myCards.create(this, $('cards_' + player_id), this.cardwidth, this.cardheight);
                     myCards.image_items_per_row = 1;
+                    myCards.item_margin = 2;
                     myCards.apparenceBorderWidth = '2px';
                     myCards.setSelectionMode(0);
                     myCards.onItemCreate = dojo.hitch(this, 'setupCard');
@@ -216,10 +217,10 @@ define([
                     // Increase width if we have more than 2 cards
                     var total = myCards.getAllItems().length;
                     if (total > 2) {
-                        domStyle.set('cards_' + player_id, 'width', '270px');
+                        dojo.addClass('cards_' + player_id, 'wide');
                         myCards.setOverlap(50, 0);
                     } else {
-                        domStyle.set('cards_' + player_id, 'width', null);
+                        dojo.removeClass('cards_' + player_id, 'wide');
                         myCards.setOverlap(0, 0);
                     }
                 }
@@ -636,7 +637,12 @@ define([
                         if (n.args.action) {
                             var action_ref = this.gamedatas.actions[n.args.action];
                             if (action_ref != null) {
-                                html += '<i class="mdi ' + action_ref.icon + '"></i> ';
+                                html += '<i class="mdi ' + action_ref.icon + '"';
+                                var character_ref = this.gamedatas.characters[action_ref.character];
+                                if (character_ref != null) {
+                                    html += ' style="color: ' + character_ref.color + '"';
+                                }
+                                html += '></i> ';
                             }
                         }
                         html += dojo.string.substitute(_(n.args.balloon), n.args);
@@ -690,7 +696,7 @@ define([
                 }
 
                 // Remove increased width
-                domStyle.set('cards_' + player_id, 'width', null);
+                dojo.removeClass('cards_' + player_id, 'wide');
                 myCards.setOverlap(0, 0);
 
                 if (n.args.deck_count) {
@@ -711,7 +717,7 @@ define([
                     // Increase width if we have more than 2 cards
                     var total = myCards.getAllItems().length + cards.length;
                     if (total > 2) {
-                        domStyle.set('cards_' + player_id, 'width', '270px');
+                        dojo.addClass('cards_' + player_id, 'wide');
                         myCards.setOverlap(50, 0);
                     }
 
@@ -723,7 +729,7 @@ define([
                     // Increase width if we have more than 2 cards
                     var total = myCards.getAllItems().length + n.args.count;
                     if (total > 2) {
-                        domStyle.set('cards_' + player_id, 'width', '270px');
+                        dojo.addClass('cards_' + player_id, 'wide');
                         myCards.setOverlap(50, 0);
                     }
 

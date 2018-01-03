@@ -15,7 +15,7 @@
 
 @import url(../../../css/csslayer.css);
 @import url('https://fonts.googleapis.com/css?family=Alegreya:500,500i,700,800&subset=latin-ext');
-@import url('https://cdn.materialdesignicons.com/2.0.46/css/materialdesignicons.min.css');
+@import url('https://cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css');
 
 /* Characters */
 
@@ -44,6 +44,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-around;
+  align-items: center;
 }
 
 #myactions {
@@ -100,8 +101,8 @@
 }
 
 #myactions i {
-  opacity: .5;
-  font-size: 42px;
+  opacity: .66;
+  font-size: 32px;
   line-height: 100%;
   color: #333;
   padding-right: 5px;
@@ -119,27 +120,21 @@
 
 #circle {
   position: relative;
-  height: 440px;
-  width: 440px;
+  height: 460px;
+  width: 460px;
   background: rgba(255, 255, 255, 0.33);
   border-radius: 50%;
-  margin: 90px 120px;
+  margin: 100px;
   flex: 0 0 auto;
-}
-
-#circle.circle-6 {
-  height: 500px;
-  width: 500px;
-  margin: 90px 85px;
 }
 
 .oncircle {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 220px;
-  height: 220px;
-  margin: -110px;
+  width: 196px;
+  height: 196px;
+  margin: -98px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -162,90 +157,78 @@
 }
 
 .oncircle.player-0 {
-  transform: translate(0, -220px);
+  transform: translate(0, -230px);
   z-index: 1;
 }
 
-.circle-6 .oncircle.player-0 {
-  transform: translate(0, -250px);
-}
-
 .circle-6 .oncircle.player-1 {
-  /* transform: rotate(-30deg) translate(250px) rotate(30deg); */
-  transform: translate(216px, -125px);
+  /* transform: rotate(-30deg) translate(230px) rotate(30deg); */
+  transform: translate(199px, -115px);
   align-items: flex-end;
   z-index: 2;
 }
 
-.circle-6 .oncircle.player-2 {
-  /* transform: rotate(30deg) translate(250px) rotate(-30deg); */
-  transform: translate(216px, 125px);
+.circle-6 .oncircle.player-2,
+.circle-3 .oncircle.player-1 {
+  /* transform: rotate(30deg) translate(230px) rotate(-30deg); */
+  transform: translate(199px, 115px);
   align-items: flex-start;
   z-index: 2;
 }
 
 .circle-6 .oncircle.player-3 {
-  transform: translate(0, 250px);
+  transform: translate(0, 230px);
   z-index: 3;
 }
 
-.circle-6 .oncircle.player-4 {
-  /* transform: rotate(150deg) translate(250px) rotate(-150deg); */
-  transform: translate(-216px, 125px);
+.circle-6 .oncircle.player-4,
+.circle-3 .oncircle.player-2 {
+  /* transform: rotate(150deg) translate(230px) rotate(-150deg); */
+  transform: translate(-199px, 115px);
   align-items: flex-start;
   z-index: 2;
 }
 
 .circle-6 .oncircle.player-5 {
-  /* transform: rotate(210deg) translate(250px) rotate(-210deg); */
-  transform: translate(-216px, -125px);
+  /* transform: rotate(210deg) translate(230px) rotate(-210deg); */
+  transform: translate(-199px, -115px);
   align-items: flex-end;
   z-index: 2;
 }
 
 .circle-5 .oncircle.player-1 {
-  /* transform: rotate(-18deg) translate(220px) rotate(18deg); */
-  transform: translate(209px, -68px);
+  /* transform: rotate(-18deg) translate(230px) rotate(18deg); */
+  transform: translate(219px, -71px);
   align-items: flex-end;
 }
 
 .circle-5 .oncircle.player-2 {
-  /* transform: rotate(54deg) translate(220px) rotate(-54deg); */
-  transform: translate(129px, 178px);
+  /* transform: rotate(54deg) translate(230px) rotate(-54deg); */
+  transform: translate(135px, 186px);
 }
 
 .circle-5 .oncircle.player-3 {
-  /* transform: rotate(126deg) translate(220px) rotate(-126deg); */
-  transform: translate(-129px, 178px);
+  /* transform: rotate(126deg) translate(230px) rotate(-126deg); */
+  transform: translate(-135px, 186px);
 }
 
 .circle-5 .oncircle.player-4 {
-  /* transform: rotate(198deg) translate(220px) rotate(-198deg); */
-  transform: translate(-209px, -68px);
+  /* transform: rotate(198deg) translate(230px) rotate(-198deg); */
+  transform: translate(-219px, -71px);
   align-items: flex-end;
 }
 
 .circle-4 .oncircle.player-1 {
-  transform: translate(220px, 0);
+  transform: translate(230px, 0);
 }
 
 .circle-4 .oncircle.player-2,
 .circle-2 .oncircle.player-1 {
-  transform: translate(0, 220px);
+  transform: translate(0, 230px);
 }
 
 .circle-4 .oncircle.player-3 {
-  transform: translate(-220px, 0);
-}
-
-.circle-3 .oncircle.player-1 {
-  /* transform: rotate(30deg) translate(220px) rotate(-30deg); */
-  transform: translate(190px, 110px);
-}
-
-.circle-3 .oncircle.player-2 {
-  /* transform: rotate(150deg) translate(220px) rotate(-150deg); */
-  transform: translate(-190px, 110px);
+  transform: translate(-230px, 0);
 }
 
 .placemat {
@@ -287,7 +270,7 @@
   position: relative;
   margin: 0 5px 10px 0;
   font-size: 18px;
-  line-height: 100%;
+  line-height: 20px;
   text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.33);
 }
 
@@ -314,8 +297,13 @@
 }
 
 .cards {
-  width: 210px;
+  width: 184px;
+  padding-right: 3px;
   perspective: 800px;
+}
+
+.cards.wide {
+  width: 233px;
 }
 
 .card {
@@ -323,7 +311,7 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   transform-style: preserve-3d;
   transform-origin: left center;
-  width: 100px;
+  width: 90px;
   height: 128px;
   background: url(img/cards.jpg);
 }

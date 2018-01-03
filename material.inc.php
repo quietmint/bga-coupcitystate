@@ -35,7 +35,7 @@ $this->actions = array(
     ),
     2 => array(
        'name' => clienttranslate('Foreign Aid'),
-       'icon' => 'mdi-cash-multiple',
+       'icon' => 'mdi-gift',
        'text' => clienttranslate('Take ₤2.'),
        'subtext' => '',
        'balloonAttempt' => clienttranslate('I will take foreign aid...'),
