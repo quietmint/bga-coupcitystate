@@ -325,12 +325,12 @@
   content: "";
   display: block;
   position: absolute;
-  top: -9px;
-  left: 48px;
+  top: -7px;
+  left: 42px;
   width: 5px;
-  height: 145px;
+  height: 142px;
   border-radius: 2px;
-  transform: rotate(-37deg);
+  transform: rotate(-33deg);
   background: rgba(0, 0, 0, 0.5);
 }
 
