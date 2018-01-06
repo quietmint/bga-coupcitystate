@@ -47,18 +47,20 @@ $game_options = array(
                 'tmdisplay' => totranslate('5 rounds to win')
             ),
         )
-    )
+    ),
 
-    /*100 => array(
-        'name' => totranslate('Variant'),
+    101 => array(
+        'name' => totranslate('Factions'),
         'values' => array(
-            1 => array(
-                'name' => totranslate('Standard deck')
+            0 => array(
+                'name' => totranslate('No')
             ),
-            2 => array(
-                'name' => totranslate('Inquisitor replaces Ambassador'),
-                'tmdisplay' => totranslate('Inquisitor')
+            1 => array(
+                'name' => totranslate('Yes'),
+                'tmdisplay' => totranslate('Factions'),
+                'beta' => true,
+                'nobeginner' => true
             )
         )
-    )*/
+    )
 );

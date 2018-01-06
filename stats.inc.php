@@ -118,6 +118,16 @@ $stats_type = array(
             'type' => 'int',
             'name' => totranslate('Steal actions')
         ),
+        'action8' => array(
+            'id' => 28,
+            'type' => 'int',
+            'name' => totranslate('Convert actions')
+        ),
+        'action9' => array(
+            'id' => 29,
+            'type' => 'int',
+            'name' => totranslate('Embezzle actions')
+        ),
         'blockIssued' => array(
             'id' => 50,
             'type' => 'int',

@@ -1,25 +1,17 @@
 {OVERALL_GAME_HEADER}
 <div id="game_wrap">
   <div id="myactions">
-    <div class="actionrowhead">Actions on your turn:</div>
-    <div class="actionrow">
-      <!-- BEGIN action_any -->
-      <div class="action action-{action_id}" data-action="{action_id}">
-        <div class="actionhead">{name} {claimHtml}</div>
-        <div class="actionwrap">
-          <i class="mdi {icon}"></i>
-          <div class="actiondesc">{text} {subtext} {blockHtml}</div>
-        </div>
-      </div>
-      <!-- END action_any -->
-    </div>
+    <div class="actionrowhead">{I18N_Actions}:</div>
     <div class="actionrow">
       <!-- BEGIN action -->
       <div class="action action-{action_id}" data-action="{action_id}">
-        <div class="actionhead">{name} {claimHtml}</div>
-        <div class="actionwrap">
-          <i class="mdi {icon}" style="color: {color}"></i>
-          <div class="actiondesc">{text} {subtext} {blockHtml}</div>
+        <i class="icon-action-{action_id} mdi {icon}"></i>
+        <div class="actiondesc">
+          <div class="actionhead">
+            {name}
+            <div class="actionwho">{claimHtml}</div>
+          </div>
+          {text} {subtext} {blockHtml}
         </div>
       </div>
       <!-- END action -->
@@ -27,16 +19,20 @@
   </div>
 
   <div id="circle" class="circle-{player_count}">
+    <div id="almshouse" class="oncircle hide" data-action="9">
+      {I18N_Almshouse} (<span id="almshousecount">₤0</span>)
+    </div>
     <div id="deck" class="oncircle" data-action="6">
-      <div id="deckcount">Deck ({deck_count})</div>
-      <div class="card"></div>
+      {I18N_Deck} (<span id="deckcount">0</span>)
+      <div id="deckcard" class="card"></div>
     </div>
     <!-- BEGIN player -->
     <div class="oncircle player-{index}">
       <div id="placemat_{player_id}" class="placemat player-{index}" style="color: #{player_color}" data-player="{player_id}">
         <div class="playerhead">
           <div id="balloon_{player_id}" class="balloon"></div>
-          <div id="wealth_{player_id}" class="wealth">₤0</div>
+          <div id="wealth_{player_id}" class="wealth"></div>
+          <div id="faction_{player_id}" class="faction-name"></div>
           <div class="player-name">{player_name}</div>
         </div>
         <div id="cards_{player_id}" class="cards"></div>

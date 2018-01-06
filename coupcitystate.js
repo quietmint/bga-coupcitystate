@@ -38,13 +38,22 @@ define([
                         for (var character in characters) {
                             var character_ref = characters[character];
                             if (character_ref.name != null) {
-                                var styleized = '<div class="character-name" style="background-color: ' + character_ref.color_bright + '">' + character_ref.name + '</div>';
+                                var styleized = '<div class="character-name character-' + character + '">' + character_ref.name + '</div>';
                                 if (args.card_name == character_ref.name) {
                                     args.card_name = styleized;
                                 }
                                 if (args.card_name2 == character_ref.name) {
                                     args.card_name2 = styleized;
                                 }
+                            }
+                        }
+
+                        // Stylize faction names
+                        for (var faction in this.gamedatas.factions) {
+                            var faction_ref = this.gamedatas.factions[faction];
+                            var stylized = '<div class="faction-name faction-' + faction + '"><i class="mdi ' + faction_ref.icon + '"></i> ' + faction_ref.name + '</div>';
+                            if (args.faction_name == faction_ref.name) {
+                                args.faction_name = stylized;
                             }
                         }
 
@@ -96,13 +105,19 @@ define([
                 if (!this.isSpectator) {
                     dojo.addClass('placemat_' + this.player_id, 'mine');
                     dojo.query('#myactions .action').connect('onclick', this, 'onAct');
+                    dojo.query('#almshouse').connect('onclick', this, 'onAct');
                     dojo.query('#deck').connect('onclick', this, 'onAct');
 
                     var osp = dojo.hitch(this, 'onSelectPlayer');
                     var placemats = document.querySelectorAll('.placemat');
-                    for (var i = 1; i < placemats.length; i++) {
-                        placemats[i].addEventListener('click', osp, true);
+                    for (var i = 0; i < placemats.length; i++) {
+                        placemats[i].addEventListener('click', osp, i > 0);
                     }
+                }
+
+                // Almshouse
+                if (gamedatas.variantFactions) {
+                    dojo.removeClass('almshouse', 'hide');
                 }
 
                 this.tableau = {};
@@ -138,7 +153,7 @@ define([
                 dojo.addClass(card_div, 'card');
                 if (card_type_id > 0) {
                     var character_ref = this.gamedatas.characters[card_type_id];
-                    var tip = '<div class="character-name" style="background-color: ' + character_ref.color_bright + '">' + character_ref.name + '</div>' +
+                    var tip = '<div class="character-name character-' + card_type_id + '">' + character_ref.name + '</div>' +
                         '<div style="max-width: 200px">' + character_ref.text + ' ' + character_ref.subtext + '</div>';
                     this.addTooltipHtml(card_div.id, tip);
                     dojo.place('<div class="card-name">' + character_ref.name + '</div>', card_div.id);
@@ -153,8 +168,11 @@ define([
                 // Reset balloons
                 dojo.query('.balloon').forEach(dojo.empty);
 
+                // Reset almshouse count
+                $('almshousecount').innerText = '₤' + (gamedatas.almshouse || 0);
+
                 // Reset deck count
-                $('deckcount').innerText = 'Deck (' + gamedatas.deckCount + ')';
+                $('deckcount').innerText = gamedatas.deckCount || 0;
 
                 for (var player_id in gamedatas.players) {
                     var player = gamedatas.players[player_id];
@@ -178,6 +196,16 @@ define([
                         }, true);
                     }
 
+                    // Reset faction
+                    if (player.faction) {
+                        this.notif_convert({
+                            args: {
+                                player_id: player_id,
+                                faction: player.faction
+                            }
+                        })
+                    }
+
                     // Reset wealth
                     this.notif_wealth({
                         args: {
@@ -194,7 +222,7 @@ define([
                     if (player.tableau) {
                         for (var i in player.tableau) {
                             var card = player.tableau[i];
-                            myCards.addToStockWithId(+card.type, +card.id, 'deck');
+                            myCards.addToStockWithId(+card.type, +card.id, 'deckcard');
                             var divId = myCards.getItemDivId(+card.id);
                             dojo.addClass(divId, 'dead');
                             this.removeTooltip(divId);
@@ -206,12 +234,11 @@ define([
                         if (gamedatas.hand) {
                             for (var i in gamedatas.hand) {
                                 var card = gamedatas.hand[i];
-                                myCards.addToStockWithId(+card.type, +card.id, 'deck');
+                                myCards.addToStockWithId(+card.type, +card.id, 'deckcard');
                             }
                         }
                     } else {
-                        var handCount = +player.handCount || 0;
-                        this.addUnknownCards(myCards, handCount, 'deck');
+                        this.addUnknownCards(myCards, player.handCount, 'deckcard');
                     }
 
                     // Increase width if we have more than 2 cards
@@ -314,6 +341,9 @@ define([
                                 if (args.card_name != null) {
                                     var str = dojo.string.substitute(_('I challenge ${player_name2}\'s ${card_name}'), args);
                                     this.addActionButton('button_yes', str, 'onActionYes');
+                                } else if (args.forbid != null) {
+                                    var str = dojo.string.substitute(_('I challenge ${player_name2}'), args);
+                                    this.addActionButton('button_yes', str, 'onActionYes');
                                 }
 
                                 // Combine public and private block actions
@@ -348,6 +378,8 @@ define([
             doAction: function(action, args) {
                 if (this.checkAction(action)) {
                     console.info('Taking action: ' + action, args);
+                    // Deselect target
+                    dojo.query('.placemat.selected').removeClass('selected');
                     args = args || {};
                     args.lock = true;
                     this.ajaxcall('/coupcitystate/coupcitystate/' + action + '.html', args, this, function(result) {});
@@ -461,35 +493,31 @@ define([
                     // Check wealth
                     var wealth = this.gamedatas.players[this.player_id].wealth;
                     if (wealth >= 10 && action_ref.name != 'Coup') {
-                        this.showMessage(_('You must Coup because you have ₤10.'), 'error');
+                        this.showMessage(_('Invalid move. You must Coup because you have ₤10.'), 'error');
                         return;
                     } else if (wealth < action_ref.cost) {
-                        var str = _('You need ₤%d for this action.').replace('%d', action_ref.cost);
+                        var str = _('Invalid move. You need ₤%d for this action.').replace('%d', action_ref.cost);
                         this.showMessage(str, 'error');
                         return;
                     }
 
                     // Check target
                     if (action_ref.target) {
-                        var targetWealth = 0;
                         var target = dojo.query('.placemat.selected')[0];
                         // Automatic targeting with 2 active players
-                        if (target == null) {
+                        if (target == null && action_ref.name != 'Convert') {
                             var possibleTargets = dojo.query('.placemat:not(.eliminated):not(#placemat_' + this.player_id + ')');
                             if (possibleTargets.length == 1) {
                                 target = possibleTargets[0];
                             }
                         }
-                        if (target != null) {
-                            args.target = +domAttr.get(target, 'data-player');
-                            targetWealth = this.gamedatas.players[args.target].wealth;
-                        }
-                        if (target == null || (action_ref.name == 'Steal' && targetWealth == 0)) {
+                        if (target == null) {
                             this.pendingAction = action;
-                            var msg = action_ref.name == 'Steal' ? _('Choose an active player with money.') : _('Choose an active player.');
+                            var msg = _('Choose a target player for this action.');
                             this.showMessage(msg, 'info');
                             return;
                         }
+                        args.target = +domAttr.get(target, 'data-player');
                     }
 
                     this.doAction('act', args);
@@ -552,6 +580,10 @@ define([
                 dojo.subscribe('eliminate', this, 'notif_eliminate');
                 dojo.subscribe('scores', this, 'notif_scores');
 
+                dojo.subscribe('convertInstant', this, 'notif_convert');
+                dojo.subscribe('convert', this, 'notif_convert');
+                this.notifqueue.setSynchronous('convert', 2000);
+
                 dojo.subscribe('wealthInstant', this, 'notif_wealth');
                 dojo.subscribe('wealth', this, 'notif_wealth');
                 this.notifqueue.setSynchronous('wealth', 2000);
@@ -605,12 +637,33 @@ define([
                 }
             },
 
+            notif_convert: function(n) {
+                var player_id = n.args.player_id;
+                var faction = n.args.faction;
+                var faction_ref = this.gamedatas.factions[faction];
+                this.gamedatas.players[player_id].faction = faction;
+                dojo.removeClass('faction_' + player_id, 'faction-1 faction-2');
+                dojo.addClass('faction_' + player_id, 'faction-' + faction);
+                var factionEl = $('faction_' + player_id);
+                factionEl.innerHTML = '<i class="mdi ' + faction_ref.icon + '"></i>';
+                factionEl.title = faction_ref.name;
+                dojo.removeClass('placemat_' + player_id, 'faction-1 faction-2');
+                dojo.addClass('placemat_' + player_id, 'faction-' + faction);
+
+                if (n.args.balloon) {
+                    this.notif_balloon(n);
+                }
+            },
+
             notif_wealth: function(n) {
                 var player_id = n.args.player_id;
                 var wealth = n.args.wealth || 0;
                 this.gamedatas.players[player_id].wealth = wealth;
                 $('wealth_' + player_id).innerText = '₤' + wealth;
                 $('panel_wealth_' + player_id).innerText = '₤' + wealth + ' • ';
+                if (n.args.almshouse != null) {
+                    $('almshousecount').innerText = '₤' + n.args.almshouse;
+                }
 
                 if (n.args.balloon) {
                     this.notif_balloon(n);
@@ -632,17 +685,12 @@ define([
                     // New balloon
                     var html = '';
                     if (isNo) {
-                        html = '<i class="mdi mdi-thumb-up-outline"></i>';
+                        html = '<i class="icon-action-no mdi mdi-thumb-up-outline"></i>';
                     } else if (n.args.balloon != null) {
                         if (n.args.action) {
                             var action_ref = this.gamedatas.actions[n.args.action];
                             if (action_ref != null) {
-                                html += '<i class="mdi ' + action_ref.icon + '"';
-                                var character_ref = this.gamedatas.characters[action_ref.character];
-                                if (character_ref != null) {
-                                    html += ' style="color: ' + character_ref.color + '"';
-                                }
-                                html += '></i> ';
+                                html += '<i class="icon-action-' + n.args.action + ' mdi ' + action_ref.icon + '"></i> ';
                             }
                         }
                         html += dojo.string.substitute(_(n.args.balloon), n.args);
@@ -657,14 +705,14 @@ define([
                 var player_id = n.args.player_id;
                 var myCards = this.tableau[player_id];
                 if (myCards != null) {
-                    for (var i = 0; i < n.args.card_ids.length; i++) {
-                        var id = +n.args.card_ids[i];
-                        var cardtype = +n.args.card_types[i];
-                        if (!this.hasCard(myCards, id)) {
+                    var cards = n.args.cards;
+                    for (var i = 0; i < cards.length; i++) {
+                        var card = cards[i];
+                        if (!this.hasCard(myCards, +card.id)) {
                             this.removeUnknownCards(myCards, 1);
-                            myCards.addToStockWithId(cardtype, id);
+                            myCards.addToStockWithId(+card.type, +card.id);
                         }
-                        var divId = myCards.getItemDivId(id);
+                        var divId = myCards.getItemDivId(+card.id);
                         var newClass = 'reveal';
                         if (!n.args.alive) {
                             newClass += ' dead';
@@ -688,11 +736,11 @@ define([
                     // Discard visible cards by ID
                     for (var i = 0; i < card_ids.length; i++) {
                         var id = +card_ids[i];
-                        myCards.removeFromStockById(id, 'deck');
+                        myCards.removeFromStockById(id, 'deckcard');
                     }
                 } else if (!isMe && n.args.count) {
                     // Discard hidden cards
-                    this.removeUnknownCards(myCards, n.args.count, 'deck');
+                    this.removeUnknownCards(myCards, n.args.count, 'deckcard');
                 }
 
                 // Remove increased width
@@ -700,7 +748,7 @@ define([
                 myCards.setOverlap(0, 0);
 
                 if (n.args.deck_count) {
-                    $('deckcount').innerText = 'Deck (' + n.args.deck_count + ')';
+                    $('deckcount').innerText = n.args.deck_count;
                 }
 
                 if (n.args.balloon) {
@@ -722,8 +770,8 @@ define([
                     }
 
                     for (var i = 0; i < cards.length; i++) {
-                        var card = n.args.cards[i];
-                        myCards.addToStockWithId(+card.type, +card.id, 'deck');
+                        var card = cards[i];
+                        myCards.addToStockWithId(+card.type, +card.id, 'deckcard');
                     }
                 } else if (!isMe && n.args.count) {
                     // Increase width if we have more than 2 cards
@@ -734,11 +782,11 @@ define([
                     }
 
                     // Draw hidden card(s)
-                    this.addUnknownCards(myCards, n.args.count, 'deck');
+                    this.addUnknownCards(myCards, n.args.count, 'deckcard');
                 }
 
                 if (n.args.deck_count) {
-                    $('deckcount').innerText = 'Deck (' + n.args.deck_count + ')';
+                    $('deckcount').innerText = n.args.deck_count;
                 }
 
                 if (n.args.balloon) {

@@ -88,7 +88,7 @@ $machinestates = array(
         "args" => "argAsk",
         "action" => "stAsk",
         "possibleactions" => array( "actionBlock", "actionNo", "actionYes" ),
-        "transitions" => array( "askBlock" => 11, "yes" => 60, "execute" => 80, "zombiePass" => 80 )
+        "transitions" => array( "askBlock" => 11, "yes" => 60, "yesAll" => 62, "execute" => 80, "zombiePass" => 80 )
     ),
 
     11 => array(
@@ -136,6 +136,14 @@ $machinestates = array(
         "type" => "game",
         "action" => "stChallengeBlock",
         "transitions" => array( "askChooseCard" => 12, "execute" => 80, "killLoss" => 90 )
+    ),
+
+    62 => array(
+        "name" => "challengeAll",
+        "description" => '',
+        "type" => "game",
+        "action" => "stChallengeAll",
+        "transitions" => array( "execute" => 80, "killLoss" => 90 )
     ),
 
     80 => array(

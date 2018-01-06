@@ -36,7 +36,7 @@ class view_coupcitystate_coupcitystate extends game_view
     public function getCharacterName($character_id)
     {
         $character_ref = $this->game->characters[$character_id];
-        return '<div class="character-name" style="background-color: ' . $character_ref['color_bright'] . '">' . $character_ref['name'] . '</div>';
+        return '<div class="character-name character-' . $character_id . '">' . $character_ref['name'] . '</div>';
     }
 
     public function build_page($viewArgs)
@@ -45,12 +45,23 @@ class view_coupcitystate_coupcitystate extends game_view
         $current_player_id = $g_user->get_id();
         $template = self::getGameName() . '_' . self::getGameName();
 
+        // Translations for static text
+        $this->tpl['I18N_Actions'] = self::_('Actions on your turn');
+        $this->tpl['I18N_Almshouse'] = self::_('Almshouse');
+        $this->tpl['I18N_Deck'] = self::_('Deck');
+
         // Inflate action block
         $this->page->begin_block($template, 'action');
-        $this->page->begin_block($template, 'action_any');
         foreach ($this->game->actions as $action => $action_ref) {
+            // Check if variant is enabled
+            if ($action_ref['variant'] && !$this->game->getGameStateValue($action_ref['variant'])) {
+                continue;
+            }
+
             $args = $action_ref;
             unset($args['blockers']);
+            $args['action_id'] = $action;
+
             $args['blockHtml'] = self::_('Cannot block.');
             if (count($action_ref['blockers']) > 0) {
                 $card_name = '';
@@ -60,25 +71,23 @@ class view_coupcitystate_coupcitystate extends game_view
                 $card_name = substr($card_name, 0, -3);
                 $args['blockHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('${card_name} can block.')));
             }
-            $args['action_id'] = $action;
-            $args['color'] = '';
+
             $args['claimHtml'] = '';
             if ($args['character'] > 0) {
                 $card_name = $this->getCharacterName($args['character']);
-                $args['claimHtml'] = self::raw($card_name);
-                $args['color'] = $this->game->characters[$args['character']]['color'];
-                $this->page->insert_block('action', $args);
+                $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('as ${card_name}')));
+            } elseif ($args['forbid'] > 0) {
+                $card_name = $this->getCharacterName($action_ref['forbid']);
+                $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('not as ${card_name}')));
             } else {
-                $args['claimHtml'] = self::raw('<div class="character-name any">' . self::_('Any character') . '</div>');
-                $this->page->insert_block('action_any', $args);
+                //$args['claimHtml'] = self::_('as any character');
             }
-            //$this->page->insert_block('action', $args);
+            $this->page->insert_block('action', $args);
         }
 
         // Get players & players number
         $players = $this->game->loadPlayersBasicInfos();
         $this->tpl['player_count'] = count($players);
-        $this->tpl['deck_count'] = $this->game->cards->countCardInLocation('deck');
         $spectator = !array_key_exists($current_player_id, $players);
 
         // Compute order starting with current player
@@ -89,7 +98,7 @@ class view_coupcitystate_coupcitystate extends game_view
             $id = intval($current_player_id);
         }
         $player_order = array($id);
-        for ($i = 1; $i < $this->game->getPlayersNumber(); $i++) {
+        for ($i = 1; $i < $this->tpl['player_count']; $i++) {
             $id = $this->game->getPlayerAfter($id);
             array_push($player_order, $id);
         }
