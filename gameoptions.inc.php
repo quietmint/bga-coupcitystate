@@ -58,7 +58,6 @@ $game_options = array(
             1 => array(
                 'name' => totranslate('Yes'),
                 'tmdisplay' => totranslate('Factions'),
-                'beta' => true,
                 'nobeginner' => true
             )
         )

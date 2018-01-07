@@ -86,47 +86,47 @@ $stats_type = array(
         'action1' => array(
             'id' => 21,
             'type' => 'int',
-            'name' => totranslate('Income actions')
+            'name' => totranslate('Income')
         ),
         'action2' => array(
             'id' => 22,
             'type' => 'int',
-            'name' => totranslate('Foreign Aid actions')
+            'name' => totranslate('Foreign Aid')
         ),
         'action3' => array(
             'id' => 23,
             'type' => 'int',
-            'name' => totranslate('Coup actions')
+            'name' => totranslate('Coup')
         ),
         'action4' => array(
             'id' => 24,
             'type' => 'int',
-            'name' => totranslate('Tax actions')
+            'name' => totranslate('Tax')
         ),
         'action5' => array(
             'id' => 25,
             'type' => 'int',
-            'name' => totranslate('Assassinate actions')
+            'name' => totranslate('Assassinate')
         ),
         'action6' => array(
             'id' => 26,
             'type' => 'int',
-            'name' => totranslate('Exchange actions')
+            'name' => totranslate('Exchange')
         ),
         'action7' => array(
             'id' => 27,
             'type' => 'int',
-            'name' => totranslate('Steal actions')
+            'name' => totranslate('Steal')
         ),
         'action8' => array(
             'id' => 28,
             'type' => 'int',
-            'name' => totranslate('Convert actions')
+            'name' => totranslate('Convert')
         ),
         'action9' => array(
             'id' => 29,
             'type' => 'int',
-            'name' => totranslate('Embezzle actions')
+            'name' => totranslate('Embezzle')
         ),
         'blockIssued' => array(
             'id' => 50,

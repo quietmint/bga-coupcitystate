@@ -20,7 +20,7 @@
  */
 
 $this->actions = array(
-    1 => array(
+    INCOME => array(
        'name' => clienttranslate('Income'),
        'icon' => 'mdi-cash',
        'text' => clienttranslate('Take ₤1.'),
@@ -36,7 +36,7 @@ $this->actions = array(
        'blockers' => array(),
        'variant' => '',
     ),
-    2 => array(
+    FOREIGN_AID => array(
        'name' => clienttranslate('Foreign Aid'),
        'icon' => 'mdi-gift',
        'text' => clienttranslate('Take ₤2.'),
@@ -52,7 +52,7 @@ $this->actions = array(
        'blockers' => array(1),
        'variant' => '',
     ),
-    3 => array(
+    COUP => array(
        'name' => clienttranslate('Coup'),
        'icon' => 'mdi-alert-decagram',
        'text' => clienttranslate('Pay ₤7.'),
@@ -67,7 +67,7 @@ $this->actions = array(
        'blockers' => array(),
        'variant' => '',
     ),
-    8 => array(
+    CONVERT => array(
        'name' => clienttranslate('Convert'),
        'icon' => 'mdi-account-convert',
        'text' => clienttranslate('Pay almshouse.'),
@@ -82,7 +82,7 @@ $this->actions = array(
        'blockers' => array(),
        'variant' => 'variantFactions',
     ),
-    9 => array(
+    EMBEZZLE => array(
        'name' => clienttranslate('Embezzle'),
        'icon' => 'mdi-home-heart',
        'text' => clienttranslate('Steal from almshouse.'),
@@ -93,11 +93,11 @@ $this->actions = array(
        'target' => false,
        'cost' => 0,
        'character' => 0,
-       'forbid' => 1,
+       'forbid' => DUKE,
        'blockers' => array(),
        'variant' => 'variantFactions',
     ),
-    4 => array(
+    TAX => array(
        'name' => clienttranslate('Tax'),
        'icon' => 'mdi-seal',
        'text' => clienttranslate('Take ₤3.'),
@@ -108,12 +108,12 @@ $this->actions = array(
        'target' => false,
        'cost' => 0,
        'amount' => 3,
-       'character' => 1,
+       'character' => DUKE,
        'forbid' => 0,
        'blockers' => array(),
        'variant' => '',
     ),
-    7 => array(
+    STEAL => array(
        'name' => clienttranslate('Steal'),
        'icon' => 'mdi-anchor',
        'text' => clienttranslate('Steal ₤2 from another player.'),
@@ -123,12 +123,12 @@ $this->actions = array(
        'logExecute' => clienttranslate('${player_name} steals ₤${amount} from ${player_name2}.'),
        'target' => true,
        'cost' => 0,
-       'character' => 4,
+       'character' => CAPTAIN,
        'forbid' => 0,
-       'blockers' => array(3, 4),
+       'blockers' => array(CAPTAIN, AMBASSADOR),
        'variant' => '',
     ),
-    6 => array(
+    EXCHANGE => array(
        'name' => clienttranslate('Exchange'),
        'icon' => 'mdi-swap-horizontal',
        'text' => clienttranslate('Exchange 2 cards with the deck.'),
@@ -138,12 +138,12 @@ $this->actions = array(
        'logExecute' => clienttranslate('${player_name} draws ${count} cards from the deck.'),
        'target' => false,
        'cost' => 0,
-       'character' => 3,
+       'character' => AMBASSADOR,
        'forbid' => 0,
        'blockers' => array(),
        'variant' => '',
     ),
-    5 => array(
+    ASSASSINATE => array(
        'name' => clienttranslate('Assassinate'),
        'icon' => 'mdi-skull',
        'text' => clienttranslate('Pay ₤3.'),
@@ -153,55 +153,55 @@ $this->actions = array(
        'logExecute' => clienttranslate('${player_name} pays ₤3 to assassinate ${player_name2}.'),
        'target' => true,
        'cost' => 3,
-       'character' => 2,
+       'character' => ASSASSIN,
        'forbid' => 0,
-       'blockers' => array(5),
+       'blockers' => array(CONTESSA),
        'variant' => '',
     ),
 );
 
 $this->characters = array(
     0 => array(
-        'name' => null,
-        'text' => null,
-        'subtext' => null,
+       'name' => null,
+       'text' => null,
+       'subtext' => null,
     ),
-    1 => array(
-        'name' => clienttranslate('Duke'),
-        'text' => clienttranslate('Take ₤3.'),
-        'subtext' => clienttranslate('Blocks foreign aid.'),
+    DUKE => array(
+       'name' => clienttranslate('Duke'),
+       'text' => clienttranslate('Take ₤3.'),
+       'subtext' => clienttranslate('Blocks foreign aid.'),
     ),
-    2 => array(
-        'name' => clienttranslate('Assassin'),
-        'text' => clienttranslate('Pay ₤3.'),
-        'subtext' => clienttranslate('Choose player to lose influence.'),
+    ASSASSIN => array(
+       'name' => clienttranslate('Assassin'),
+       'text' => clienttranslate('Pay ₤3.'),
+       'subtext' => clienttranslate('Choose player to lose influence.'),
     ),
-    3 => array(
-        'name' => clienttranslate('Ambassador'),
-        'text' => clienttranslate('Exchange 2 cards with the deck.'),
-        'subtext' => clienttranslate('Blocks stealing.'),
+    AMBASSADOR => array(
+       'name' => clienttranslate('Ambassador'),
+       'text' => clienttranslate('Exchange 2 cards with the deck.'),
+       'subtext' => clienttranslate('Blocks stealing.'),
     ),
-    4 => array(
-        'name' => clienttranslate('Captain'),
-        'text' => clienttranslate('Steal ₤2 from another player.'),
-        'subtext' => clienttranslate('Blocks stealing.'),
+    CAPTAIN => array(
+       'name' => clienttranslate('Captain'),
+       'text' => clienttranslate('Steal ₤2 from another player.'),
+       'subtext' => clienttranslate('Blocks stealing.'),
     ),
-    5 => array(
-        'name' => clienttranslate('Contessa'),
-        'text' => '',
-        'subtext' => clienttranslate('Blocks assassination.'),
+    CONTESSA => array(
+       'name' => clienttranslate('Contessa'),
+       'text' => '',
+       'subtext' => clienttranslate('Blocks assassination.'),
     ),
 );
 
 $this->factions = array(
     1 => array(
-        'name' => 'Monarchist',
-        'icon' => 'mdi-crown'
+        'name' => clienttranslate('Monarchist'),
+        'icon' => 'mdi-crown',
     ),
     2 => array(
-        'name' => 'Populist',
-        'icon' => 'mdi-pillar'
-    )
+        'name' => clienttranslate('Populist'),
+        'icon' => 'mdi-pillar',
+    ),
 );
 
 $this->balloons = array(
@@ -217,11 +217,4 @@ $this->balloons = array(
     'truth'        => clienttranslate('I was truthful. ${player_name2} challenged incorrectly.'),
     'wealth'       => clienttranslate('I take ₤${amount}'),
     'convert'      => clienttranslate('I convert to the ${faction_name} faction'),
-);
-
-$this->reasonText = array(
-    1 => clienttranslate('challenged to reveal the ${card_name}'),
-    2 => clienttranslate('killed by losing the challenge'),
-    3 => clienttranslate('killed by ${player_name2}'),
-    4 => clienttranslate('killed by losing the challenge and by ${player_name2}')
 );

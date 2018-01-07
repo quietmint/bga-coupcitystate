@@ -54,156 +54,158 @@ $machinestates = array(
 
     // The initial state. Please do not modify.
     1 => array(
-        "name" => "gameSetup",
-        "description" => "",
-        "type" => "manager",
-        "action" => "stGameSetup",
-        "transitions" => array( "" => 2 )
+        'name' => 'gameSetup',
+        'description' => '',
+        'type' => 'manager',
+        'action' => 'stGameSetup',
+        'transitions' => array( '' => 2 )
     ),
 
     2 => array(
-        "name" => "roundBegin",
-        "description" => '',
-        "type" => "game",
-        "action" => "stRoundBegin",
-        "updateGameProgression" => true,
-        "transitions" => array( "" => 3 )
+        'name' => 'roundBegin',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stRoundBegin',
+        'updateGameProgression' => true,
+        'transitions' => array( '' => 3 )
     ),
 
     3 => array(
-        "name" => "playerStart",
-        "description" => clienttranslate('${actplayer} must take an action.'),
-        "descriptionmyturn" => clienttranslate('${you} must take an action.'),
-        "type" => "activeplayer",
-        "action" => "stPlayerStart",
-        "possibleactions" => array( "act" ),
-        "transitions" => array( "ask" => 10, "execute" => 80, "zombiePass" => 97 )
+        'name' => 'playerStart',
+        'description' => clienttranslate('${actplayer} must take an action.'),
+        'descriptionmyturn' => clienttranslate('${you} must take an action.'),
+        'type' => 'activeplayer',
+        'action' => 'stPlayerStart',
+        'possibleactions' => array( 'act' ),
+        'transitions' => array( 'ask' => 10, 'execute' => 80, 'zombiePass' => 97 )
     ),
 
     10 => array(
-        "name" => "ask",
-        "description" => clienttranslate('Wait until all players have responded.'),
-        "descriptionmyturn" => clienttranslate('Stop ${player_name2}\'s ${action}?'),
-        "type" => "multipleactiveplayer",
-        "args" => "argAsk",
-        "action" => "stAsk",
-        "possibleactions" => array( "actionBlock", "actionNo", "actionYes" ),
-        "transitions" => array( "askBlock" => 11, "yes" => 60, "yesAll" => 62, "execute" => 80, "zombiePass" => 80 )
+        'name' => 'ask',
+        'description' => clienttranslate('Wait until all players have responded.'),
+        'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s ${action}?'),
+        'i18n' => array('action'),
+        'type' => 'multipleactiveplayer',
+        'args' => 'argAsk',
+        'action' => 'stAsk',
+        'possibleactions' => array( 'actionBlock', 'actionNo', 'actionYes' ),
+        'transitions' => array( 'askBlock' => 11, 'yes' => 60, 'yesAll' => 62, 'execute' => 80, 'zombiePass' => 80 )
     ),
 
     11 => array(
-        "name" => "askBlock",
-        "description" => clienttranslate('Wait until all players have responded.'),
-        "descriptionmyturn" => clienttranslate('Stop ${player_name2}\'s block?'),
-        "type" => "multipleactiveplayer",
-        "args" => "argAsk",
-        "action" => "stAsk",
-        "possibleactions" => array( "actionNo", "actionYes" ),
-        "transitions" => array( "yes" => 61, "execute" => 80, "zombiePass" => 80 )
+        'name' => 'askBlock',
+        'description' => clienttranslate('Wait until all players have responded.'),
+        'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s block?'),
+        'type' => 'multipleactiveplayer',
+        'args' => 'argAsk',
+        'action' => 'stAsk',
+        'possibleactions' => array( 'actionNo', 'actionYes' ),
+        'transitions' => array( 'yes' => 61, 'execute' => 80, 'zombiePass' => 80 )
     ),
 
     12 => array(
-        "name" => "askChooseCard",
-        "description" => clienttranslate('${actplayer} must choose a card (${reason}).'),
-        "descriptionmyturn" => clienttranslate('${you} must choose a card (${reason}).'),
-        "type" => "activeplayer",
-        "args" => "argChooseCard",
-        "il8n" => array( "card_name" ),
-        "possibleactions" => array( "actionChooseCard" ),
-        "transitions" => array( "challenge" => 60, "challengeBlock" => 61, "killLoss" => 90, "killCoup" => 82 )
+        'name' => 'askChooseCard',
+        'description' => clienttranslate('${actplayer} must choose a card: ${reason} (${detail}).'),
+        'descriptionmyturn' => clienttranslate('${you} must choose a card: ${reason} (${detail}).'),
+        'i18n' => array('reason', 'detail'),
+        'type' => 'activeplayer',
+        'args' => 'argChooseCard',
+        'possibleactions' => array( 'actionChooseCard' ),
+        'transitions' => array( 'challenge' => 60, 'challengeBlock' => 61, 'killLoss' => 90, 'killCoup' => 82 )
     ),
 
     13 => array(
-        "name" => "askDiscard",
-        "description" => clienttranslate('${actplayer} must choose 2 active cards to discard.'),
-        "descriptionmyturn" => clienttranslate('${you} must choose 2 active cards to discard.'),
-        "type" => "activeplayer",
-        "possibleactions" => array( "actionDiscard" ),
-        "transitions" => array( "killLoss" => 90 )
+        'name' => 'askDiscard',
+        'description' => clienttranslate('${actplayer} must discard ${count} cards.'),
+        'descriptionmyturn' => clienttranslate('${you} must discard ${count} cards.'),
+        'type' => 'activeplayer',
+        'args' => 'argDiscard',
+        'possibleactions' => array( 'actionDiscard' ),
+        'transitions' => array( 'killLoss' => 90 )
     ),
 
     60 => array(
-        "name" => "challenge",
-        "description" => '',
-        "type" => "game",
-        "action" => "stChallenge",
-        "transitions" => array( "askChooseCard" => 12, "execute" => 80, "killLoss" => 90 )
+        'name' => 'challenge',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stChallenge',
+        'transitions' => array( 'askChooseCard' => 12, 'execute' => 80, 'killLoss' => 90 )
     ),
 
     61 => array(
-        "name" => "challengeBlock",
-        "description" => '',
-        "type" => "game",
-        "action" => "stChallengeBlock",
-        "transitions" => array( "askChooseCard" => 12, "execute" => 80, "killLoss" => 90 )
+        'name' => 'challengeBlock',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stChallengeBlock',
+        'transitions' => array( 'askChooseCard' => 12, 'execute' => 80, 'killLoss' => 90 )
     ),
 
     62 => array(
-        "name" => "challengeAll",
-        "description" => '',
-        "type" => "game",
-        "action" => "stChallengeAll",
-        "transitions" => array( "execute" => 80, "killLoss" => 90 )
+        'name' => 'challengeAll',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stChallengeAll',
+        'transitions' => array( 'execute' => 80, 'killLoss' => 90 )
     ),
 
     80 => array(
-        "name" => "execute",
-        "description" => '',
-        "type" => "game",
-        "action" => "stExecute",
-        "transitions" => array( "killCoup" => 82, "killLoss" => 90, "askDiscard" => 13 )
+        'name' => 'execute',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stExecute',
+        'transitions' => array( 'killCoup' => 82, 'killLoss' => 90, 'askDiscard' => 13 )
     ),
 
     81 => array(
-        "name" => "discard",
-        "description" => '',
-        "type" => "game",
-        "action" => "stDiscard",
-        "transitions" => array( "" => 90  )
+        'name' => 'discard',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stDiscard',
+        'transitions' => array( '' => 90  )
     ),
 
     82 => array(
-        "name" => "killCoup",
-        "description" => '',
-        "type" => "game",
-        "action" => "stKillCoup",
-        "transitions" => array( "killLoss" => 90, "askChooseCard" => 12, "roundEnd" => 98  )
+        'name' => 'killCoup',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stKillCoup',
+        'transitions' => array( 'killLoss' => 90, 'askChooseCard' => 12, 'roundEnd' => 98  )
     ),
 
     90 => array(
-        "name" => "killLoss",
-        "description" => '',
-        "type" => "game",
-        "action" => "stKillLoss",
-        "transitions" => array( "playerEnd" => 97, "askChooseCard" => 12 )
+        'name' => 'killLoss',
+        'description' => clienttranslate('Revealing cards.'),
+        'type' => 'game',
+        'action' => 'stKillLoss',
+        'transitions' => array( 'playerEnd' => 97, 'askChooseCard' => 12 )
     ),
 
     97 => array(
-        "name" => "playerEnd",
-        "description" => '',
-        "type" => "game",
-        "action" => "stPlayerEnd",
-        "updateGameProgression" => true,
-        "transitions" => array( "playerStart" => 3, "roundEnd" => 98 )
+        'name' => 'playerEnd',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stPlayerEnd',
+        'updateGameProgression' => true,
+        'transitions' => array( 'playerStart' => 3, 'roundEnd' => 98 )
     ),
 
     98 => array(
-        "name" => "roundEnd",
-        "description" => '',
-        "type" => "game",
-        "action" => "stRoundEnd",
-        "updateGameProgression" => true,
-        "transitions" => array( "roundBegin" => 2, "gameEnd" => 99 )
+        'name' => 'roundEnd',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stRoundEnd',
+        'updateGameProgression' => true,
+        'transitions' => array( 'roundBegin' => 2, 'gameEnd' => 99 )
     ),
 
     // Final state.
     // Please do not modify.
     99 => array(
-        "name" => "gameEnd",
-        "description" => clienttranslate("End of game"),
-        "type" => "manager",
-        "action" => "stGameEnd",
-        "args" => "argGameEnd"
+        'name' => 'gameEnd',
+        'description' => clienttranslate('End of game'),
+        'type' => 'manager',
+        'action' => 'stGameEnd',
+        'args' => 'argGameEnd'
     )
 
 );
