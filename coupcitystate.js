@@ -27,64 +27,47 @@ define([
         }
 
         return declare("bgagame.coupcitystate", ebg.core.gamegui, {
-            constructor: function() {
-                this.cardwidth = 90;
-                this.cardheight = 128;
+            constructor: function() {},
 
-                function argsFilter(args) {
-                    if (this.gamedatas) {
-                        // Stylize character names
-                        var characters = this.gamedatas.characters;
-                        for (var character in characters) {
-                            var character_ref = characters[character];
-                            if (character_ref.name != null) {
-                                var styleized = '<div class="character-name character-' + character + '">' + character_ref.name + '</div>';
-                                if (args.card_name == character_ref.name) {
-                                    args.card_name = styleized;
-                                }
-                                if (args.card_name2 == character_ref.name) {
-                                    args.card_name2 = styleized;
-                                }
-                            }
-                        }
+            /* Stylize character and faction names in logs, balloons, buttons, etc. */
 
-                        // Stylize faction names
-                        for (var faction in this.gamedatas.factions) {
-                            var faction_ref = this.gamedatas.factions[faction];
-                            var stylized = '<div class="faction-name faction-' + faction + '"><i class="mdi ' + faction_ref.icon + '"></i> ' + faction_ref.name + '</div>';
-                            if (args.faction_name == faction_ref.name) {
-                                args.faction_name = stylized;
-                            }
-                        }
-
-                        // Stylize player names
-                        for (var player in this.gamedatas.players) {
-                            var player_ref = this.gamedatas.players[player];
-                            var stylized = '<!--PNS--><span style="font-weight:bold;color:#' + player_ref.color;
-                            if (player_ref.color_back) {
-                                stylized += ';background-color:#' + player_ref.color_back;
-                            }
-                            stylized += '">' + player_ref.name + '</span><!--PNE-->';;
-
-                            if (args.player_name == player_ref.name) {
-                                args.player_name = stylized;
-                            }
-                            if (args.player_name2 == player_ref.name) {
-                                args.player_name2 = stylized;
-                            }
-                        }
-
-                        // Recurse through nested arguments
-                        for (argname in args) {
-                            if (argname != 'i18n' && typeof args[argname] == 'object' &&
-                                args[argname] !== null && typeof args[argname].log != 'undefined' && typeof args[argname].args != 'undefined') {
-                                args[argname].args = argsFilter(args[argname].args);
-                            }
-                        }
+            format_string_recursive: function(str, args) {
+                if (str && args && !args.formatted) {
+                    args.formatted = true;
+                    if (args.card_name) {
+                        args.card_name = this.format_character_name(args.card_name);
                     }
-                    return args;
-                };
-                this.notifqueue.playerNameFilterGame = argsFilter.bind(this);
+                    if (args.card_name2) {
+                        args.card_name2 = this.format_character_name(args.card_name2);
+                    }
+                    if (args.detail) {
+                        args.detail = this.format_character_name(args.detail);
+                    }
+                    if (args.faction_name) {
+                        args.faction_name = this.format_faction_name(args.faction_name);
+                    }
+                }
+                return this.inherited(arguments);
+            },
+
+            format_character_name: function(character_name) {
+                for (var character in this.gamedatas.characters) {
+                    var character_ref = this.gamedatas.characters[character];
+                    if (character_name == character_ref.name) {
+                        return '<div class="character-name character-' + character + '">' + character_name + '</div>';
+                    }
+                }
+                return character_name;
+            },
+
+            format_faction_name: function(faction_name) {
+                for (var faction in this.gamedatas.factions) {
+                    var faction_ref = this.gamedatas.factions[faction];
+                    if (faction_name == faction_ref.name) {
+                        return '<div class="faction-name faction-' + faction + '"><i class="mdi ' + faction_ref.icon + '"></i> ' + faction_name + '</div>';
+                    }
+                }
+                return faction_name;
             },
 
             /*
@@ -127,7 +110,7 @@ define([
 
                     // Setup stock
                     var myCards = new ebg.stock();
-                    myCards.create(this, $('cards_' + player_id), this.cardwidth, this.cardheight);
+                    myCards.create(this, $('cards_' + player_id), 90, 128);
                     myCards.image_items_per_row = 1;
                     myCards.item_margin = 2;
                     myCards.apparenceBorderWidth = '2px';
@@ -306,15 +289,14 @@ define([
                     switch (stateName) {
                         case 'ask':
                         case 'askBlock':
-                            var dialogVisible = false;
-                            var dialog = dojo.query('.dijitDialogUnderlayWrapper');
-                            if (dialog.length > 0) {
-                                dialogVisible = dialog[0].style.display != 'none';
-                            }
-                            if (!window.passIntervalId && !dialogVisible && typeof g_replayFrom == 'undefined') {
-                                // Auto pass after 10 - 15 seconds
+                            // Auto pass timer after 15 seconds, unless dialog visible or in replay mode
+                            var dialogList = dojo.query('.dijitDialogUnderlayWrapper');
+                            var isDialog = dialogList.length > 0 && dialogList[0].style.display != 'none';
+                            var isReplay = document.getElementById('previously_on').style.display == 'block';
+                            if (!window.passIntervalId && !isDialog && !isReplay && typeof g_replayFrom == 'undefined') {
+                                // Auto pass after 15 seconds
                                 clearInterval(window.passIntervalId);
-                                window.passIntervalSeconds = getRandomInt(10, 15);
+                                window.passIntervalSeconds = 15;
                                 window.passIntervalId = setInterval(function() {
                                     var button_no = document.getElementById('button_no');
                                     if (button_no != null) { // tick
@@ -339,10 +321,10 @@ define([
                             this.addActionButton('button_no', _('I allow') + (window.passIntervalSeconds ? ' (' + window.passIntervalSeconds + ')' : ''), 'onActionNo');
                             if (args != null) {
                                 if (args.card_name != null) {
-                                    var str = dojo.string.substitute(_('I challenge ${player_name2}\'s ${card_name}'), args);
+                                    var str = this.format_string_recursive(_('I challenge ${player_name2}\'s ${card_name}'), args);
                                     this.addActionButton('button_yes', str, 'onActionYes');
                                 } else if (args.forbid != null) {
-                                    var str = dojo.string.substitute(_('I challenge ${player_name2}'), args);
+                                    var str = this.format_string_recursive(_('I challenge ${player_name2}'), args);
                                     this.addActionButton('button_yes', str, 'onActionYes');
                                 }
 
@@ -357,7 +339,7 @@ define([
                                 for (var i = 0; i < blockers.length; i++) {
                                     var blocker = blockers[i];
                                     var character_ref = this.gamedatas.characters[blocker];
-                                    var str = dojo.string.substitute(_('I block with my ${card_name}'), {
+                                    var str = this.format_string_recursive(_('I block with my ${card_name}'), {
                                         card_name: character_ref.name
                                     });
                                     this.addActionButton('button_block' + blocker, str, 'onBlock');
@@ -370,6 +352,15 @@ define([
                             break;
                     }
                 }
+            },
+
+            onWouldLikeToThink: function(evt) {
+                // Add 15 seconds to auto-pass timer
+                if (window.passIntervalSeconds) {
+                    window.passIntervalSeconds += 15;
+                    console.info('Extended auto-pass timer (' + window.passIntervalSeconds + ' seconds)');
+                }
+                return this.inherited(arguments);
             },
 
             ///////////////////////////////////////////////////
@@ -673,8 +664,6 @@ define([
             notif_balloon: function(n, fromInit) {
                 var player_id = n.args.player_id;
                 if (player_id) {
-                    // Styleize player/character names like notifications
-                    n.args = this.notifqueue.playerNameFilterGame(n.args);
                     var isNo = n.args.balloon == 'no';
 
                     // Clear all balloons
@@ -693,7 +682,7 @@ define([
                                 html += '<i class="icon-action-' + n.args.action + ' mdi ' + action_ref.icon + '"></i> ';
                             }
                         }
-                        html += dojo.string.substitute(_(n.args.balloon), n.args);
+                        html += this.format_string_recursive(_(n.args.balloon), n.args);
                     }
                     if (html) {
                         $('balloon_' + player_id).innerHTML = html;

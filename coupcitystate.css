@@ -16,7 +16,6 @@
 @import url(../../../css/csslayer.css);
 @import url('https://fonts.googleapis.com/css?family=Alegreya:500,500i,700,800&subset=latin-ext');
 @import url('https://cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css');
-
 /* Characters and Factions */
 
 .character-name,
@@ -24,14 +23,13 @@
   display: inline-block;
   border-radius: 3px;
   color: white;
-  font: normal 500 85%/110% 'Roboto', Arial, sans-serif;
+  font: normal 500 90%/110% 'Roboto', Arial, sans-serif;
   text-transform: uppercase;
   letter-spacing: -0.5px;
   text-shadow: 0 0 3px black;
   padding: 1px 4px;
   margin: 0 1px;
 }
-
 
 /* Duke */
 
@@ -43,7 +41,6 @@
   color: #6A1B9A !important;
 }
 
-
 /* Assassin */
 
 .character-name.character-2 {
@@ -53,7 +50,6 @@
 .icon-action-5 {
   color: #4E342E !important;
 }
-
 
 /* Ambassador */
 
@@ -65,7 +61,6 @@
   color: #33691E !important;
 }
 
-
 /* Captain */
 
 .character-name.character-4 {
@@ -76,13 +71,11 @@
   color: #0D47A1 !important;
 }
 
-
 /*Contessa */
 
 .character-name.character-5 {
   background-color: #D50000;
 }
-
 
 /* Factions */
 
@@ -131,7 +124,6 @@
 .playerhead>.faction-name i {
   font-size: 18px;
 }
-
 
 /* Action buttons (during turn) */
 
@@ -520,7 +512,6 @@
   vertical-align: text-top;
   color: #333;
 }
-
 
 /* Utility */
 
