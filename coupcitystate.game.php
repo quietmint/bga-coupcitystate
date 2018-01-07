@@ -767,7 +767,11 @@ class coupcitystate extends Table
             $args['detail'] = $this->characters[$character]['name'];
         } elseif ($reasonNum == REASON_LOSS) {
             $args['reason'] = clienttranslate('Lost challenge');
-            $args['detail'] = $this->getName(self::getGameStateValue('playerTurn'));
+            $player_id = self::getGameStateValue('playerBlock');
+            if ($player_id == 0) {
+                $player_id = self::getGameStateValue('playerTurn');
+            }
+            $args['detail'] = $this->getName($player_id);
         } elseif ($reasonNum == REASON_KILL) {
             $args['reason'] = clienttranslate('Killed');
             $args['detail'] = $this->getName(self::getGameStateValue('playerTurn'));
