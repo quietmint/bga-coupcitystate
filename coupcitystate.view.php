@@ -79,8 +79,6 @@ class view_coupcitystate_coupcitystate extends game_view
             } elseif ($args['forbid'] > 0) {
                 $card_name = $this->getCharacterName($action_ref['forbid']);
                 $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('not as ${card_name}')));
-            } else {
-                //$args['claimHtml'] = self::_('as any character');
             }
             $this->page->insert_block('action', $args);
         }

@@ -174,7 +174,7 @@ $machinestates = array(
 
     90 => array(
         'name' => 'killLoss',
-        'description' => clienttranslate('Revealing cards.'),
+        'description' => '',
         'type' => 'game',
         'action' => 'stKillLoss',
         'transitions' => array( 'playerEnd' => 97, 'askChooseCard' => 12 )
