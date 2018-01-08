@@ -42,10 +42,6 @@ $game_options = array(
                 'name' => '4',
                 'tmdisplay' => totranslate('4 rounds to win')
             ),
-            5 => array(
-                'name' => '5',
-                'tmdisplay' => totranslate('5 rounds to win')
-            ),
         )
     ),
 
@@ -60,6 +56,15 @@ $game_options = array(
                 'tmdisplay' => totranslate('Factions'),
                 'nobeginner' => true
             )
-        )
+        ),
+        'startcondition' => array(
+            1 => array(
+                array(
+                    'type' => 'minplayers',
+                    'value' => 3,
+                    'message' => totranslate('Factions requires 3+ players.')
+                )
+            )
+        ),
     )
 );
