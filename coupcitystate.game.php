@@ -802,6 +802,9 @@ class coupcitystate extends Table
         $round = self::getGameStateValue('round') + 1;
         self::setGameStateValue('round', $round);
 
+        // Reset almshouse
+        self::setGameStateValue('almshouse', 0);
+
         // Reset active players
         self::DbQuery('UPDATE player SET player_wealth = 0, round_eliminated = 0, faction = 0, balloon = NULL WHERE player_eliminated = 0');
         $players = $this->getPlayers();
