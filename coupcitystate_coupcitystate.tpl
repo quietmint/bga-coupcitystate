@@ -11,7 +11,7 @@
             {name}
             <div class="actionwho">{claimHtml}</div>
           </div>
-          {text} {subtext} {blockHtml}
+          {text} {blockHtml}
         </div>
       </div>
       <!-- END action -->
@@ -22,7 +22,7 @@
     <div id="almshouse" class="oncircle hide" data-action="9">
       {I18N_Almshouse} (<span id="almshousecount">₤0</span>)
     </div>
-    <div id="deck" class="oncircle" data-action="6">
+    <div id="deck" class="oncircle" data-action="{action_deck}">
       {I18N_Deck} (<span id="deckcount">0</span>)
       <div id="deckcard" class="card"></div>
     </div>

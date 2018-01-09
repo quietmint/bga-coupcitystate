@@ -78,8 +78,27 @@ class action_coupcitystate extends APP_GameAction
     public function actionDiscard()
     {
         self::setAjaxMode();
-        $card_ids = explode(';', self::getArg('card_ids', AT_numberlist, true));
+        $str = self::getArg('card_ids', AT_numberlist, true);
+        if ($str == '') {
+            $card_ids = array();
+        } else {
+            $card_ids = explode(';', $str);
+        }
         $this->game->actionDiscard($card_ids);
+        self::ajaxResponse();
+    }
+
+    public function actionExamineKeep()
+    {
+        self::setAjaxMode();
+        $this->game->actionExamineKeep();
+        self::ajaxResponse();
+    }
+
+    public function actionExamineExchange()
+    {
+        self::setAjaxMode();
+        $this->game->actionExamineExchange();
         self::ajaxResponse();
     }
 }

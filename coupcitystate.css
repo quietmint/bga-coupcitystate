@@ -31,6 +31,10 @@
   margin: 0 1px;
 }
 
+.dijitTooltip .character-name {
+  font-size: 14px;
+}
+
 /* Duke */
 
 .character-name.character-1 {
@@ -71,10 +75,21 @@
   color: #0D47A1 !important;
 }
 
-/*Contessa */
+/* Contessa */
 
 .character-name.character-5 {
   background-color: #D50000;
+}
+
+/* Inquisitor */
+
+.character-name.character-6 {
+  background-color: #FFA726;
+}
+
+.icon-action-10,
+.icon-action-11 {
+  color: #E65100 !important;
 }
 
 /* Factions */
@@ -218,6 +233,14 @@
   border-radius: 50%;
   margin: 110px;
   flex: 0 0 auto;
+}
+
+#circle.circle-3 {
+  margin-bottom: 0;
+}
+
+#circle.circle-5 {
+  margin-bottom: 60px;
 }
 
 .oncircle {
@@ -396,10 +419,6 @@
   perspective: 800px;
 }
 
-.cards.wide {
-  width: 233px;
-}
-
 .card {
   border-radius: 10px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -408,6 +427,10 @@
   width: 90px;
   height: 128px;
   background: url(img/cards.jpg);
+}
+
+.card.secret {
+  border-width: 2px;
 }
 
 .card.reveal {
@@ -538,7 +561,6 @@
   }
   body:not(.logs_on_additional_column) .action .actionwho {
     display: inline-block;
-    padding-left: 10px;
   }
 }
 
@@ -551,6 +573,5 @@
   }
   .action .actionwho {
     display: inline-block;
-    padding-left: 10px;
   }
 }

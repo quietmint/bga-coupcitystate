@@ -83,7 +83,7 @@ $machinestates = array(
     10 => array(
         'name' => 'ask',
         'description' => clienttranslate('Wait until all players have responded.'),
-        'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s ${action}?'),
+        'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s ${action_name}?'),
         'i18n' => array('action'),
         'type' => 'multipleactiveplayer',
         'args' => 'argAsk',
@@ -111,7 +111,7 @@ $machinestates = array(
         'type' => 'activeplayer',
         'args' => 'argChooseCard',
         'possibleactions' => array( 'actionChooseCard' ),
-        'transitions' => array( 'challenge' => 60, 'challengeBlock' => 61, 'killLoss' => 90, 'killCoup' => 82 )
+        'transitions' => array( 'challenge' => 60, 'challengeBlock' => 61, 'killLoss' => 90, 'killCoup' => 82, 'execute' => 80 )
     ),
 
     13 => array(
@@ -121,6 +121,17 @@ $machinestates = array(
         'type' => 'activeplayer',
         'args' => 'argDiscard',
         'possibleactions' => array( 'actionDiscard' ),
+        'transitions' => array( 'killLoss' => 90 )
+    ),
+
+    14 => array(
+        'name' => 'askExamine',
+        'description' => clienttranslate('${actplayer} must act on ${player_name2}\'s card.'),
+        'descriptionmyturn' => clienttranslate('${you} must act on ${player_name2}\'s card.'),
+        'type' => 'activeplayer',
+        'args' => 'argExamine',
+        'action' => 'stExamine',
+        'possibleactions' => array( 'actionExamineKeep', 'actionExamineExchange' ),
         'transitions' => array( 'killLoss' => 90 )
     ),
 
@@ -153,7 +164,7 @@ $machinestates = array(
         'description' => '',
         'type' => 'game',
         'action' => 'stExecute',
-        'transitions' => array( 'killCoup' => 82, 'killLoss' => 90, 'askDiscard' => 13 )
+        'transitions' => array( 'killCoup' => 82, 'killLoss' => 90, 'askChooseCard' => 12, 'askDiscard' => 13, 'askExamine' => 14 )
     ),
 
     81 => array(

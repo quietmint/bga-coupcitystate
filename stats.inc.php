@@ -103,20 +103,20 @@ $stats_type = array(
             'type' => 'int',
             'name' => totranslate('Tax')
         ),
-        'action5' => array(
-            'id' => 25,
+        'action7' => array(
+            'id' => 27,
             'type' => 'int',
-            'name' => totranslate('Assassinate')
+            'name' => totranslate('Steal')
         ),
         'action6' => array(
             'id' => 26,
             'type' => 'int',
             'name' => totranslate('Exchange')
         ),
-        'action7' => array(
-            'id' => 27,
+        'action5' => array(
+            'id' => 25,
             'type' => 'int',
-            'name' => totranslate('Steal')
+            'name' => totranslate('Assassinate')
         ),
         'action8' => array(
             'id' => 28,
@@ -127,6 +127,11 @@ $stats_type = array(
             'id' => 29,
             'type' => 'int',
             'name' => totranslate('Embezzle')
+        ),
+        'action11' => array(
+            'id' => 40,
+            'type' => 'int',
+            'name' => totranslate('Examine')
         ),
         'blockIssued' => array(
             'id' => 50,

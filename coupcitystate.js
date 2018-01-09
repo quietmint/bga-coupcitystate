@@ -136,10 +136,14 @@ define([
                 dojo.addClass(card_div, 'card');
                 if (card_type_id > 0) {
                     var character_ref = this.gamedatas.characters[card_type_id];
-                    var tip = '<div class="character-name character-' + card_type_id + '">' + character_ref.name + '</div>' +
-                        '<div style="max-width: 200px">' + character_ref.text + ' ' + character_ref.subtext + '</div>';
+                    // Translate all character text
+                    var text = character_ref.text.map(function(str) {
+                        return _(str)
+                    }).join(' ');
+                    var tip = '<div class="character-name character-' + card_type_id + '">' + _(character_ref.name) + '</div>' +
+                        '<div style="max-width: 200px">' + text + '</div>';
                     this.addTooltipHtml(card_div.id, tip);
-                    dojo.place('<div class="card-name">' + character_ref.name + '</div>', card_div.id);
+                    dojo.place('<div class="card-name">' + _(character_ref.name) + '</div>', card_div.id);
                 }
             },
 
@@ -223,16 +227,7 @@ define([
                     } else {
                         this.addUnknownCards(myCards, player.handCount, 'deckcard');
                     }
-
-                    // Increase width if we have more than 2 cards
-                    var total = myCards.getAllItems().length;
-                    if (total > 2) {
-                        dojo.addClass('cards_' + player_id, 'wide');
-                        myCards.setOverlap(50, 0);
-                    } else {
-                        dojo.removeClass('cards_' + player_id, 'wide');
-                        myCards.setOverlap(0, 0);
-                    }
+                    this.resizeHand(player_id, myCards.getAllItems().length);
                 }
             },
 
@@ -270,9 +265,7 @@ define([
             onLeavingState: function(stateName) {
                 console.info('Leaving state: ' + stateName);
                 if (!this.isSpectator) {
-                    clearInterval(window.passIntervalId);
-                    delete window.passIntervalId;
-                    delete window.passIntervalSeconds;
+                    this.stopPassTimer();
                     if (stateName == 'playerStart') {
                         dojo.query('.placemat.selected').removeClass('selected');
                     }
@@ -289,36 +282,7 @@ define([
                     switch (stateName) {
                         case 'ask':
                         case 'askBlock':
-                            // Auto pass timer after 15 seconds, unless dialog visible or in replay mode
-                            var dialogList = dojo.query('.dijitDialogUnderlayWrapper');
-                            var isDialog = dialogList.length > 0 && dialogList[0].style.display != 'none';
-                            var isReplay = document.getElementById('previously_on').style.display == 'block';
-                            if (!window.passIntervalId && !isDialog && !isReplay && typeof g_replayFrom == 'undefined') {
-                                // Auto pass after 15 seconds
-                                clearInterval(window.passIntervalId);
-                                window.passIntervalSeconds = 15;
-                                window.passIntervalId = setInterval(function() {
-                                    var button_no = document.getElementById('button_no');
-                                    if (button_no != null) { // tick
-                                        button_no.textContent = _('I allow') + ' (' + window.passIntervalSeconds-- + ')';
-                                    } else {
-                                        window.passIntervalSeconds = 0;
-                                    }
-
-                                    if (window.passIntervalSeconds <= 0) { // stop
-                                        if (button_no != null) {
-                                            console.info('Executing auto-pass timer');
-                                            button_no.click();
-                                        }
-                                        clearInterval(window.passIntervalId);
-                                        delete window.passIntervalId;
-                                        delete window.passIntervalSeconds;
-                                    }
-                                }, 1000);
-                                console.info('Starting auto-pass timer (' + window.passIntervalSeconds + ' seconds)');
-                            }
-
-                            this.addActionButton('button_no', _('I allow') + (window.passIntervalSeconds ? ' (' + window.passIntervalSeconds + ')' : ''), 'onActionNo');
+                            this.addActionButton('button_no', _('I allow'), 'onActionNo');
                             if (args != null) {
                                 if (args.card_name != null) {
                                     var str = this.format_string_recursive(_('I challenge ${player_name2}\'s ${card_name}'), args);
@@ -340,15 +304,24 @@ define([
                                     var blocker = blockers[i];
                                     var character_ref = this.gamedatas.characters[blocker];
                                     var str = this.format_string_recursive(_('I block with my ${card_name}'), {
-                                        card_name: character_ref.name
+                                        card_name: _(character_ref.name)
                                     });
                                     this.addActionButton('button_block' + blocker, str, 'onBlock');
                                 }
                             }
+                            this.startPassTimer('button_no');
                             break;
 
                         case 'askDiscard':
                             this.addActionButton('button_exchange', _('Discard'), 'onActionDiscard');
+                            break;
+
+                        case 'askExamine':
+                            var keepText = this.format_string_recursive(_('Return ${card_name}'), args._private);
+                            var exchangeText = this.format_string_recursive(_('Exchange ${card_name}'), args._private);
+                            this.addActionButton('button_keep', keepText, 'onActionExamineKeep');
+                            this.addActionButton('button_exchange', exchangeText, 'onActionExamineExchange');
+                            this.startPassTimer('button_keep');
                             break;
                     }
                 }
@@ -358,7 +331,7 @@ define([
                 // Add 15 seconds to auto-pass timer
                 if (window.passIntervalSeconds) {
                     window.passIntervalSeconds += 15;
-                    console.info('Extended auto-pass timer (' + window.passIntervalSeconds + ' seconds)');
+                    console.info('Extend auto-pass timer (' + window.passIntervalSeconds + ' seconds)');
                 }
                 return this.inherited(arguments);
             },
@@ -367,6 +340,7 @@ define([
             //// Utility methods
 
             doAction: function(action, args) {
+                this.stopPassTimer();
                 if (this.checkAction(action)) {
                     console.info('Taking action: ' + action, args);
                     // Deselect target
@@ -384,14 +358,18 @@ define([
             },
 
             addUnknownCards: function(stock, count, from) {
+                var card_ids = [];
                 if (count > 0) {
                     var unknownCount = stock.getAllItems().filter(function(card) {
                         return card.type == 0;
                     }).length;
                     for (var i = 0; i < count; i++) {
-                        stock.addToStockWithId(0, 100 + unknownCount + i, from);
+                        var card_id = 100 + unknownCount + i;
+                        card_ids.push(card_id);
+                        stock.addToStockWithId(0, card_id, from);
                     }
                 }
+                return card_ids;
             },
 
             removeUnknownCards: function(stock, count, to) {
@@ -406,6 +384,54 @@ define([
                         return removed == count;
                     });
                 }
+            },
+
+            resizeHand: function(player_id, total) {
+                // Set width and overlap based on number of cards
+                var myCards = this.tableau[player_id];
+                var width = null;
+                if (total > 2) {
+                    var width = 92 + (47 * (total - 1)) + 'px';
+                    myCards.setOverlap(50, 0);
+                } else {
+                    myCards.setOverlap(0, 0);
+                }
+                document.getElementById('cards_' + player_id).style.width = width;
+            },
+
+            startPassTimer: function startPassTimer(id) {
+                // Auto pass timer after 15 seconds, unless dialog visible or in replay mode
+                var dialogList = dojo.query('.dijitDialogUnderlayWrapper');
+                var isDialog = dialogList.length > 0 && dialogList[0].style.display != 'none';
+                var isReplay = document.getElementById('previously_on').style.display == 'block';
+                var button_pass = document.getElementById(id);
+                if (!window.passIntervalId && !isDialog && !isReplay && typeof g_replayFrom == 'undefined' && button_pass != null) {
+                    var stop = this.stopPassTimer;
+                    stop();
+                    var html = button_pass.innerHTML;
+                    window.passIntervalSeconds = 15;
+                    window.passIntervalId = setInterval(function() {
+                        var button_pass = document.getElementById(id);
+                        if (button_pass != null) { // tick
+                            button_pass.innerHTML = html + ' (' + --window.passIntervalSeconds + ')';
+                            if (window.passIntervalSeconds <= 0) { // stop
+                                console.info('Execute auto-pass timer (' + id + ')');
+                                button_pass.click();
+                            }
+                        } else {
+                            stop();
+                        }
+                    }, 1000);
+                    button_pass.innerHTML = html + ' (' + passIntervalSeconds + ')';
+                    console.info('Start auto-pass timer (' + id + ', ' + window.passIntervalSeconds + ' seconds)');
+                }
+            },
+
+            stopPassTimer: function stopPassTimer() {
+                clearInterval(window.passIntervalId);
+                delete window.passIntervalId;
+                delete window.passIntervalSeconds;
+                console.info('Stop auto-pass timer');
             },
 
             ///////////////////////////////////////////////////
@@ -446,12 +472,16 @@ define([
                         selectCards.unselectAll();
                         if (this.checkAction('act', true)) {
                             // Clicking your own card performs its action
+                            // (unless character has multiple actions)
+                            var characterActions = [];
                             for (var action in this.gamedatas.actions) {
                                 var action_ref = this.gamedatas.actions[action];
                                 if (action_ref.character == items[0].type) {
-                                    this.onAct(+action);
-                                    break;
+                                    characterActions.push(+action);
                                 }
+                            }
+                            if (characterActions.length == 1) {
+                                this.onAct(characterActions[0]);
                             }
 
                         } else if (this.checkAction('actionChooseCard', true)) {
@@ -519,21 +549,14 @@ define([
                 dojo.stopEvent(evt);
                 var items = this.tableau[this.player_id].getSelectedItems();
                 if (this.checkAction('actionDiscard')) {
-                    if (items.length == 2) {
-                        var card_ids = items.map(function(item) {
-                            return item.id;
-                        }).join(';');
-                        this.doAction('actionDiscard', {
-                            card_ids: card_ids
-                        });
-                        this.tableau[this.player_id].unselectAll();
-                    } else {
-                        this.showMessage(_('You must choose 2 active cards to discard.'), 'error');
-                        return;
-                    }
-                } else {
-                    this.tableau[this.player_id].unselectAll();
+                    var card_ids = items.map(function(item) {
+                        return item.id;
+                    }).join(';');
+                    this.doAction('actionDiscard', {
+                        card_ids: card_ids
+                    });
                 }
+                this.tableau[this.player_id].unselectAll();
             },
 
             onActionNo: function(evt) {
@@ -551,6 +574,16 @@ define([
                 this.doAction('actionBlock', {
                     card_type: +evt.currentTarget.id.substr(-1)
                 });
+            },
+
+            onActionExamineKeep: function(evt) {
+                dojo.stopEvent(evt);
+                this.doAction('actionExamineKeep');
+            },
+
+            onActionExamineExchange: function(evt) {
+                dojo.stopEvent(evt);
+                this.doAction('actionExamineExchange');
             },
 
             ///////////////////////////////////////////////////
@@ -586,6 +619,10 @@ define([
                 dojo.subscribe('revealInstant', this, 'notif_reveal');
                 dojo.subscribe('reveal', this, 'notif_reveal');
                 this.notifqueue.setSynchronous('reveal', 2000);
+
+                dojo.subscribe('unrevealInstant', this, 'notif_unreveal');
+                dojo.subscribe('unreveal', this, 'notif_unreveal');
+                this.notifqueue.setSynchronous('unreveal', 2000);
 
                 dojo.subscribe('discardInstant', this, 'notif_discard');
                 dojo.subscribe('discard', this, 'notif_discard');
@@ -635,9 +672,9 @@ define([
                 this.gamedatas.players[player_id].faction = faction;
                 dojo.removeClass('faction_' + player_id, 'faction-1 faction-2');
                 dojo.addClass('faction_' + player_id, 'faction-' + faction);
-                var factionEl = $('faction_' + player_id);
+                var factionEl = document.getElementById('faction_' + player_id);
                 factionEl.innerHTML = '<i class="mdi ' + faction_ref.icon + '"></i>';
-                factionEl.title = faction_ref.name;
+                factionEl.title = _(faction_ref.name);
                 dojo.removeClass('placemat_' + player_id, 'faction-1 faction-2');
                 dojo.addClass('placemat_' + player_id, 'faction-' + faction);
 
@@ -703,7 +740,9 @@ define([
                         }
                         var divId = myCards.getItemDivId(+card.id);
                         var newClass = 'reveal';
-                        if (!n.args.alive) {
+                        if (n.args.secret) {
+                            newClass += ' secret';
+                        } else if (!n.args.alive) {
                             newClass += ' dead';
                             this.removeTooltip(divId);
                         }
@@ -716,7 +755,32 @@ define([
                 }
             },
 
+            notif_unreveal: function(n) {
+                var player_id = n.args.player_id;
+                var myCards = this.tableau[player_id];
+                if (myCards != null) {
+                    var cards = n.args.cards;
+                    for (var i = 0; i < cards.length; i++) {
+                        var card = cards[i];
+                        if (this.hasCard(myCards, +card.id)) {
+                            myCards.removeFromStockById(+card.id);
+                            var card_ids = this.addUnknownCards(myCards, 1);
+                            var divId = myCards.getItemDivId(+card_ids[0]);
+                            dojo.addClass(divId, 'reveal');
+                        }
+                    }
+                }
+
+                if (n.args.balloon) {
+                    this.notif_balloon(n);
+                }
+            },
+
             notif_discard: function(n) {
+                if (n.args.ignored_by && n.args.ignored_by.includes(+this.player_id)) {
+                    return false;
+                }
+
                 var player_id = n.args.player_id;
                 var isMe = this.player_id == player_id;
                 var myCards = this.tableau[player_id];
@@ -731,10 +795,7 @@ define([
                     // Discard hidden cards
                     this.removeUnknownCards(myCards, n.args.count, 'deckcard');
                 }
-
-                // Remove increased width
-                dojo.removeClass('cards_' + player_id, 'wide');
-                myCards.setOverlap(0, 0);
+                this.resizeHand(player_id, myCards.getAllItems().length);
 
                 if (n.args.deck_count) {
                     $('deckcount').innerText = n.args.deck_count;
@@ -751,26 +812,19 @@ define([
                 var myCards = this.tableau[player_id];
                 var cards = n.args.cards;
                 if (cards) {
-                    // Increase width if we have more than 2 cards
                     var total = myCards.getAllItems().length + cards.length;
-                    if (total > 2) {
-                        dojo.addClass('cards_' + player_id, 'wide');
-                        myCards.setOverlap(50, 0);
-                    }
+                    this.resizeHand(player_id, total);
 
+                    // Draw cards
                     for (var i = 0; i < cards.length; i++) {
                         var card = cards[i];
                         myCards.addToStockWithId(+card.type, +card.id, 'deckcard');
                     }
                 } else if (!isMe && n.args.count) {
-                    // Increase width if we have more than 2 cards
                     var total = myCards.getAllItems().length + n.args.count;
-                    if (total > 2) {
-                        dojo.addClass('cards_' + player_id, 'wide');
-                        myCards.setOverlap(50, 0);
-                    }
+                    this.resizeHand(player_id, total);
 
-                    // Draw hidden card(s)
+                    // Draw hidden cards
                     this.addUnknownCards(myCards, n.args.count, 'deckcard');
                 }
 

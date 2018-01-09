@@ -36,7 +36,9 @@ class view_coupcitystate_coupcitystate extends game_view
     public function getCharacterName($character_id)
     {
         $character_ref = $this->game->characters[$character_id];
-        return '<div class="character-name character-' . $character_id . '">' . $character_ref['name'] . '</div>';
+        if ($this->game->meetsVariant($character_ref['variant'])) {
+            return '<div class="character-name character-' . $character_id . '">' . self::_($character_ref['name']) . '</div>';
+        }
     }
 
     public function build_page($viewArgs)
@@ -53,33 +55,48 @@ class view_coupcitystate_coupcitystate extends game_view
         // Inflate action block
         $this->page->begin_block($template, 'action');
         foreach ($this->game->actions as $action => $action_ref) {
-            // Check if variant is enabled
-            if ($action_ref['variant'] && !$this->game->getGameStateValue($action_ref['variant'])) {
+            if (!$this->game->meetsVariant($action_ref['variant'])) {
                 continue;
             }
 
-            $args = $action_ref;
-            unset($args['blockers']);
-            $args['action_id'] = $action;
+            // Find proper action for clicking on the deck
+            if ($action == EXCHANGE || $action == EXCHANGE1) {
+                $this->tpl['action_deck'] = $action;
+            }
 
-            $args['blockHtml'] = self::_('Cannot block.');
+            $args = array(
+                'action_id' => $action,
+                'icon' => $action_ref['icon'],
+                'name' => self::_($action_ref['name']),
+                'blockHtml' => self::_('Cannot block.'),
+                'claimHtml' => '',
+            );
+
+            // Translate all action text
+            $args['text'] = join(' ', array_map(function ($value) {
+                return self::_($value);
+            }, $action_ref['text']));
+
             if (count($action_ref['blockers']) > 0) {
                 $card_name = '';
                 foreach ($action_ref['blockers'] as $blocker) {
-                    $card_name .= $this->getCharacterName($blocker) . ' & ';
+                    $html = $this->getCharacterName($blocker);
+                    if ($html) {
+                        $card_name .=  $html . ' / ';
+                    }
                 }
                 $card_name = substr($card_name, 0, -3);
                 $args['blockHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('${card_name} can block.')));
             }
 
-            $args['claimHtml'] = '';
-            if ($args['character'] > 0) {
-                $card_name = $this->getCharacterName($args['character']);
+            if ($action_ref['character'] > 0) {
+                $card_name = $this->getCharacterName($action_ref['character']);
                 $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('as ${card_name}')));
-            } elseif ($args['forbid'] > 0) {
+            } elseif ($action_ref['forbid'] > 0) {
                 $card_name = $this->getCharacterName($action_ref['forbid']);
                 $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('not as ${card_name}')));
             }
+
             $this->page->insert_block('action', $args);
         }
 

@@ -42,7 +42,7 @@ $game_options = array(
                 'name' => '4',
                 'tmdisplay' => totranslate('4 rounds to win')
             ),
-        )
+        ),
     ),
 
     101 => array(
@@ -55,7 +55,7 @@ $game_options = array(
                 'name' => totranslate('Yes'),
                 'tmdisplay' => totranslate('Factions'),
                 'nobeginner' => true
-            )
+            ),
         ),
         'startcondition' => array(
             1 => array(
@@ -64,7 +64,21 @@ $game_options = array(
                     'value' => 3,
                     'message' => totranslate('Factions requires 3+ players.')
                 )
-            )
+            ),
         ),
-    )
+    ),
+
+    102 => array(
+        'name' => totranslate('Inquisitor'),
+        'values' => array(
+            0 => array(
+                'name' => totranslate('No')
+            ),
+            1 => array(
+                'name' => totranslate('Yes'),
+                'tmdisplay' => totranslate('Inquisitor'),
+                'nobeginner' => true
+            ),
+        ),
+    ),
 );
