@@ -49,38 +49,44 @@
 
 //    !! It is not a good idea to modify this file when a game is running !!
 
-
 $machinestates = array(
-
     // The initial state. Please do not modify.
-    1 => array(
+    ST_GAME_BEGIN => array(
         'name' => 'gameSetup',
         'description' => '',
         'type' => 'manager',
         'action' => 'stGameSetup',
-        'transitions' => array( '' => 2 )
+        'transitions' => array(
+            '' => ST_ROUND_BEGIN,
+        )
     ),
 
-    2 => array(
+    ST_ROUND_BEGIN => array(
         'name' => 'roundBegin',
         'description' => '',
         'type' => 'game',
         'action' => 'stRoundBegin',
         'updateGameProgression' => true,
-        'transitions' => array( '' => 3 )
+        'transitions' => array(
+            '' => ST_PLAYER_BEGIN,
+        )
     ),
 
-    3 => array(
-        'name' => 'playerStart',
+    ST_PLAYER_BEGIN => array(
+        'name' => 'playerBegin',
         'description' => clienttranslate('${actplayer} must take an action.'),
         'descriptionmyturn' => clienttranslate('${you} must take an action.'),
         'type' => 'activeplayer',
-        'action' => 'stPlayerStart',
+        'action' => 'stPlayerBegin',
         'possibleactions' => array( 'act' ),
-        'transitions' => array( 'ask' => 10, 'execute' => 80, 'zombiePass' => 97 )
+        'transitions' => array(
+            'ask' => ST_ACT,
+            'execute' => ST_EXECUTE,
+            'zombiePass' => ST_PLAYER_END,
+        )
     ),
 
-    10 => array(
+    ST_ACT => array(
         'name' => 'ask',
         'description' => clienttranslate('Wait until all players have responded.'),
         'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s ${action_name}?'),
@@ -89,10 +95,16 @@ $machinestates = array(
         'args' => 'argAsk',
         'action' => 'stAsk',
         'possibleactions' => array( 'actionBlock', 'actionNo', 'actionYes' ),
-        'transitions' => array( 'askBlock' => 11, 'yes' => 60, 'yesAll' => 62, 'execute' => 80, 'zombiePass' => 80 )
+        'transitions' => array(
+            'askBlock' => ST_ASK_BLOCK,
+            'yes' => ST_CHALLENGE,
+            'yesAll' => ST_CHALLENGE_ALL,
+            'execute' => ST_EXECUTE,
+            'zombiePass' => ST_EXECUTE,
+        )
     ),
 
-    11 => array(
+    ST_ASK_BLOCK => array(
         'name' => 'askBlock',
         'description' => clienttranslate('Wait until all players have responded.'),
         'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s block?'),
@@ -100,10 +112,14 @@ $machinestates = array(
         'args' => 'argAsk',
         'action' => 'stAsk',
         'possibleactions' => array( 'actionNo', 'actionYes' ),
-        'transitions' => array( 'yes' => 61, 'execute' => 80, 'zombiePass' => 80 )
+        'transitions' => array(
+            'yes' => ST_CHALLENGE_BLOCK,
+            'execute' => ST_EXECUTE,
+            'zombiePass' => ST_EXECUTE,
+        )
     ),
 
-    12 => array(
+    ST_ASK_CHOOSE_CARD => array(
         'name' => 'askChooseCard',
         'description' => clienttranslate('${actplayer} must choose a card: ${reason} (${detail}).'),
         'descriptionmyturn' => clienttranslate('${you} must choose a card: ${reason} (${detail}).'),
@@ -111,20 +127,28 @@ $machinestates = array(
         'type' => 'activeplayer',
         'args' => 'argChooseCard',
         'possibleactions' => array( 'actionChooseCard' ),
-        'transitions' => array( 'challenge' => 60, 'challengeBlock' => 61, 'killLoss' => 90, 'killCoup' => 82, 'execute' => 80 )
+        'transitions' => array(
+            'challenge' => ST_CHALLENGE,
+            'challengeBlock' => ST_CHALLENGE_BLOCK,
+            'killLoss' => ST_KILL_LOSS,
+            'killCoup' => ST_KILL_COUP,
+            'execute' => ST_EXECUTE,
+        )
     ),
 
-    13 => array(
+    ST_ASK_DISCARD => array(
         'name' => 'askDiscard',
         'description' => clienttranslate('${actplayer} must discard ${count} cards.'),
         'descriptionmyturn' => clienttranslate('${you} must discard ${count} cards.'),
         'type' => 'activeplayer',
         'args' => 'argDiscard',
         'possibleactions' => array( 'actionDiscard' ),
-        'transitions' => array( 'killLoss' => 90 )
+        'transitions' => array(
+            '' => ST_PLAYER_END,
+        )
     ),
 
-    14 => array(
+    ST_ASK_EXAMINE => array(
         'name' => 'askExamine',
         'description' => clienttranslate('${actplayer} must act on ${player_name2}\'s card.'),
         'descriptionmyturn' => clienttranslate('${you} must act on ${player_name2}\'s card.'),
@@ -132,91 +156,111 @@ $machinestates = array(
         'args' => 'argExamine',
         'action' => 'stExamine',
         'possibleactions' => array( 'actionExamineKeep', 'actionExamineExchange' ),
-        'transitions' => array( 'killLoss' => 90 )
+        'transitions' => array(
+            '' => ST_PLAYER_END,
+        )
     ),
 
-    60 => array(
+    ST_CHALLENGE => array(
         'name' => 'challenge',
         'description' => '',
         'type' => 'game',
         'action' => 'stChallenge',
-        'transitions' => array( 'askChooseCard' => 12, 'execute' => 80, 'killLoss' => 90 )
+        'transitions' => array(
+            'askChooseCard' => ST_ASK_CHOOSE_CARD,
+            'killLoss' => ST_KILL_LOSS,
+        )
     ),
 
-    61 => array(
+    ST_CHALLENGE_BLOCK => array(
         'name' => 'challengeBlock',
         'description' => '',
         'type' => 'game',
         'action' => 'stChallengeBlock',
-        'transitions' => array( 'askChooseCard' => 12, 'execute' => 80, 'killLoss' => 90 )
+        'transitions' => array(
+            'askChooseCard' => ST_ASK_CHOOSE_CARD,
+            'killLoss' => ST_KILL_LOSS,
+        )
     ),
 
-    62 => array(
+    ST_CHALLENGE_ALL => array(
         'name' => 'challengeAll',
         'description' => '',
         'type' => 'game',
         'action' => 'stChallengeAll',
-        'transitions' => array( 'execute' => 80, 'killLoss' => 90 )
+        'transitions' => array(
+            'killLoss' => ST_KILL_LOSS,
+        )
     ),
 
-    80 => array(
-        'name' => 'execute',
-        'description' => '',
-        'type' => 'game',
-        'action' => 'stExecute',
-        'transitions' => array( 'killCoup' => 82, 'killLoss' => 90, 'askChooseCard' => 12, 'askDiscard' => 13, 'askExamine' => 14 )
-    ),
-
-    81 => array(
-        'name' => 'discard',
-        'description' => '',
-        'type' => 'game',
-        'action' => 'stDiscard',
-        'transitions' => array( '' => 90  )
-    ),
-
-    82 => array(
-        'name' => 'killCoup',
-        'description' => '',
-        'type' => 'game',
-        'action' => 'stKillCoup',
-        'transitions' => array( 'killLoss' => 90, 'askChooseCard' => 12, 'roundEnd' => 98  )
-    ),
-
-    90 => array(
+    ST_KILL_LOSS => array(
         'name' => 'killLoss',
         'description' => '',
         'type' => 'game',
         'action' => 'stKillLoss',
-        'transitions' => array( 'playerEnd' => 97, 'askChooseCard' => 12 )
+        'transitions' => array(
+            'askChooseCard' => ST_ASK_CHOOSE_CARD,
+            'execute' => ST_EXECUTE,
+            'roundEnd' => ST_ROUND_END,
+        )
     ),
 
-    97 => array(
+    ST_EXECUTE => array(
+        'name' => 'execute',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stExecute',
+        'transitions' => array(
+            'playerEnd' => ST_PLAYER_END,
+            'killCoup' => ST_KILL_COUP,
+            'askChooseCard' => ST_ASK_CHOOSE_CARD,
+            'askDiscard' => ST_ASK_DISCARD,
+            'askExamine' => ST_ASK_EXAMINE,
+        )
+    ),
+
+    ST_KILL_COUP => array(
+        'name' => 'killCoup',
+        'description' => '',
+        'type' => 'game',
+        'action' => 'stKillCoup',
+        'transitions' => array(
+            'askChooseCard' => ST_ASK_CHOOSE_CARD,
+            'playerEnd' => ST_PLAYER_END,
+        )
+    ),
+
+    ST_PLAYER_END => array(
         'name' => 'playerEnd',
         'description' => '',
         'type' => 'game',
         'action' => 'stPlayerEnd',
         'updateGameProgression' => true,
-        'transitions' => array( 'playerStart' => 3, 'roundEnd' => 98 )
+        'transitions' => array(
+            'playerBegin' => ST_PLAYER_BEGIN,
+            'roundEnd' => ST_ROUND_END,
+        )
     ),
 
-    98 => array(
+    ST_ROUND_END => array(
         'name' => 'roundEnd',
         'description' => '',
         'type' => 'game',
         'action' => 'stRoundEnd',
         'updateGameProgression' => true,
-        'transitions' => array( 'roundBegin' => 2, 'gameEnd' => 99 )
+        'transitions' => array(
+            'roundBegin' => ST_ROUND_BEGIN,
+            'gameEnd' => ST_GAME_END,
+        )
     ),
 
     // Final state.
     // Please do not modify.
-    99 => array(
+    ST_GAME_END => array(
         'name' => 'gameEnd',
         'description' => clienttranslate('End of game'),
         'type' => 'manager',
         'action' => 'stGameEnd',
         'args' => 'argGameEnd'
     )
-
 );

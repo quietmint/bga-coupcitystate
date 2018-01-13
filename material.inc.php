@@ -237,7 +237,6 @@ $this->balloons = array(
     'challenge'    => clienttranslate('I challenge ${player_name2}\'s ${card_name}'),
     'challengeAll' => clienttranslate('I challenge ${player_name2}'),
     'die'          => clienttranslate('I lose the ${card_name}'),
-    'die2'         => clienttranslate('I lose the ${card_name} and the ${card_name2}'),
     'discard'      => clienttranslate('I discard ${count} cards'),
     'draw'         => clienttranslate('I draw ${count} cards'),
     'kill'         => clienttranslate('I kill ${player_name2}'),

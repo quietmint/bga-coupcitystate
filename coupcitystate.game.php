@@ -45,6 +45,26 @@ define('REASON_LOSS', 2);
 define('REASON_KILL', 3);
 define('REASON_EXAMINE', 4);
 
+// State constants
+define('ST_GAME_BEGIN', 1);
+define('ST_ROUND_BEGIN', 2);
+define('ST_PLAYER_BEGIN', 3);
+define('ST_ACT', 10);
+define('ST_ASK_BLOCK', 11);
+define('ST_ASK_CHOOSE_CARD', 12);
+define('ST_ASK_DISCARD', 13);
+define('ST_ASK_EXAMINE', 14);
+define('ST_CHALLENGE', 15);
+define('ST_CHALLENGE_ALL', 16);
+define('ST_CHALLENGE_BLOCK', 17);
+define('ST_DISCARD', 18);
+define('ST_EXECUTE', 19);
+define('ST_KILL_COUP', 20);
+define('ST_KILL_LOSS', 21);
+define('ST_PLAYER_END', 97);
+define('ST_ROUND_END', 98);
+define('ST_GAME_END', 99);
+
 class coupcitystate extends Table
 {
     public function __construct()
@@ -62,6 +82,7 @@ class coupcitystate extends Table
             'reasonChoose' => 11,
             'round' => 12,
             'almshouse' => 13,
+            'skipExecute' => 14,
             'playerTurn' => 20,
             'playerChallenge' => 21,
             'playerBlock' => 22,
@@ -406,46 +427,25 @@ class coupcitystate extends Table
         ));
     }
 
-    public function doKill($player_id, $playerTurn, $reason, $card_id, $card_id2=0)
+    public function doKill($player_id, $reason, $card_id)
     {
-        if ($card_id2 > 0) {
-            // Double elimination
-            $this->cards->moveCards(array($card_id, $card_id2), 'tableau', $player_id);
-            $handCount = $this->cards->countCardInLocation('hand', $player_id);
-            $card = $this->getCard($card_id);
-            $card2 = $this->getCard($card_id2);
-            $this->doBalloon('reveal', clienttranslate('${player_name} loses both the ${card_name} and the ${card_name2} in a double elimination.'), array(
-                'i18n' => array('card_name', 'card_name2'),
-                'player_id' => $player_id,
-                'player_name' => $this->getName($player_id),
-                'player_name2' => $this->getName($playerTurn),
-                'card_name' => $card['name'],
-                'card_name2' => $card2['name'],
-                'cards' => array($card, $card2),
-                'balloon' => $this->balloons['die2']
-            ));
+        $this->cards->moveCard($card_id, 'tableau', $player_id);
+        $handCount = $this->cards->countCardInLocation('hand', $player_id);
+        $card = $this->getCard($card_id);
+        if ($handCount == 0) {
+            $msg = clienttranslate('${player_name} loses the ${card_name} and is eliminated!');
         } else {
-            $this->cards->moveCard($card_id, 'tableau', $player_id);
-            $handCount = $this->cards->countCardInLocation('hand', $player_id);
-            $card = $this->getCard($card_id);
-            if ($handCount == 0) {
-                $msg = clienttranslate('${player_name} loses the ${card_name} and is eliminated.');
-            } else {
-                $msg = clienttranslate('${player_name} loses the ${card_name}.');
-            }
-            $args = array(
-                'i18n' => array('card_name'),
-                'player_id' => $player_id,
-                'player_name' => $this->getName($player_id),
-                'card_name' => $card['name'],
-                'cards' => array($card),
-                'balloon' => $this->balloons['die']
-            );
-            if ($playerTurn > 0) {
-                $args['player_name2'] = $this->getName($playerTurn);
-            }
-            $this->doBalloon('reveal', $msg, $args);
+            $msg = clienttranslate('${player_name} loses the ${card_name}.');
         }
+        $args = array(
+            'i18n' => array('card_name'),
+            'player_id' => $player_id,
+            'player_name' => $this->getName($player_id),
+            'card_name' => $card['name'],
+            'cards' => array($card),
+            'balloon' => $this->balloons['die']
+        );
+        $this->doBalloon('reveal', $msg, $args);
 
         // Check for elimination
         if ($handCount == 0) {
@@ -684,12 +684,11 @@ class coupcitystate extends Table
         $reason = self::getGameStateValue('reasonChoose');
         switch ($reason) {
         case REASON_CHALLENGE:
+            self::setGameStateValue('cardReveal', $card_id);
             $character = self::getGameStateValue('typeBlock');
             if ($character == 0) { // challenge
-                self::setGameStateValue('cardReveal', $card_id);
                 $this->gamestate->nextState('challenge');
             } else { // block
-                self::setGameStateValue('cardReveal', $card_id);
                 $this->gamestate->nextState('challengeBlock');
             }
             break;
@@ -745,7 +744,7 @@ class coupcitystate extends Table
             'balloon' => $this->balloons['discard'],
             'action' => $action,
         ));
-        $this->gamestate->nextState('killLoss');
+        $this->gamestate->nextState('');
     }
 
     public function actionExamineKeep()
@@ -761,7 +760,7 @@ class coupcitystate extends Table
         self::notifyAllPlayers('message', '${player_name} keeps the card.', array(
             'player_name' => $this->getName($playerTarget)
         ));
-        $this->gamestate->nextState('killLoss');
+        $this->gamestate->nextState('');
     }
 
     public function actionExamineExchange()
@@ -812,7 +811,7 @@ class coupcitystate extends Table
             'deck_count' => $deckCount
         ));
 
-        $this->gamestate->nextState('killLoss');
+        $this->gamestate->nextState('');
     }
 
 
@@ -1061,7 +1060,7 @@ class coupcitystate extends Table
         $this->gamestate->nextState($gameOver ? 'gameEnd' : 'roundBegin');
     }
 
-    public function stPlayerStart()
+    public function stPlayerBegin()
     {
         // Turns are chaos, so save the current player
         $playerTurn = self::getActivePlayerId();
@@ -1083,6 +1082,7 @@ class coupcitystate extends Table
         self::setGameStateValue('cardCoup', 0);
         self::setGameStateValue('cardExamine', 0);
         self::setGameStateValue('typeBlock', 0);
+        self::setGameStateValue('skipExecute', 0);
     }
 
     public function stPlayerEnd()
@@ -1098,7 +1098,7 @@ class coupcitystate extends Table
                 $nextPlayer = self::getPlayerAfter($nextPlayer);
             } while (!in_array($nextPlayer, $players));
             $this->gamestate->changeActivePlayer($nextPlayer);
-            $this->gamestate->nextState('playerStart');
+            $this->gamestate->nextState('playerBegin');
         }
     }
 
@@ -1174,22 +1174,17 @@ class coupcitystate extends Table
                 // Challenger must kill a card
                 self::setGameStateValue('playerKill', $playerChallenge);
                 self::setGameStateValue('cardKill', 0);
-
-                $this->gamestate->nextState('execute');
             } else { // lie, action cancelled
-                $args['i18n'][] = 'action_name';
-                $args['action_name'] = $action_ref['name'];
                 $args['balloon'] = $this->balloons['lie'];
-                $this->doBalloon('reveal', clienttranslate('${player_name} reveals the ${card_name} and was bluffing! ${action_name} does not occur.'), $args);
+                $this->doBalloon('reveal', clienttranslate('${player_name} reveals the ${card_name} and was bluffing!'), $args);
                 self::incStat(1, 'challengeWin', $playerChallenge);
 
                 // Turn player must kill revealed card
                 self::setGameStateValue('playerKill', $playerTurn);
                 self::setGameStateValue('cardKill', $cardReveal);
-
-                // Skip action, go to kill
-                $this->gamestate->nextState('killLoss');
+                self::setGameStateValue('skipExecute', 1);
             }
+            $this->gamestate->nextState('killLoss');
         } else { // turn reveal prompt
             self::setGameStateValue('reasonChoose', REASON_CHALLENGE);
             $this->gamestate->changeActivePlayer($playerTurn);
@@ -1230,13 +1225,9 @@ class coupcitystate extends Table
             // Challenger must kill a card
             self::setGameStateValue('playerKill', $playerChallenge);
             self::setGameStateValue('cardKill', 0);
-
-            $this->gamestate->nextState('execute');
         } else { // lie, action cancelled
-            $args['i18n'][] = 'action_name';
-            $args['action_name'] = $action_ref['name'];
             $args['balloon'] = $this->balloons['lie'];
-            $this->doBalloon('reveal', clienttranslate('${player_name} reveals the ${card_name} and was bluffing! ${action_name} does not occur.'), $args);
+            $this->doBalloon('reveal', clienttranslate('${player_name} reveals the ${card_name} and was bluffing!'), $args);
             self::incStat(1, 'challengeWin', $playerChallenge);
 
             // Turn player must replace AND kill revealed cards
@@ -1246,10 +1237,9 @@ class coupcitystate extends Table
             }
             self::setGameStateValue('playerKill', $playerTurn);
             self::setGameStateValue('cardKill', $card_ids[$index]);
-
-            // Skip action, go to kill
-            $this->gamestate->nextState('killLoss');
+            self::setGameStateValue('skipExecute', 1);
         }
+        $this->gamestate->nextState('killLoss');
     }
 
     public function stChallengeBlock()
@@ -1291,6 +1281,7 @@ class coupcitystate extends Table
                 // Challenger must kill a card
                 self::setGameStateValue('playerKill', $playerChallenge);
                 self::setGameStateValue('cardKill', 0);
+                self::setGameStateValue('skipExecute', 1);
             } else { // lie, action occurs
                 $args['balloon'] = $this->balloons['lie'];
                 $this->doBalloon('reveal', clienttranslate('${player_name} reveals the ${card_name} and was bluffing!'), $args);
@@ -1303,11 +1294,39 @@ class coupcitystate extends Table
                 self::setGameStateValue('playerKill', $playerBlock);
                 self::setGameStateValue('cardKill', $cardReveal);
             }
-            $this->gamestate->nextState('execute');
+            $this->gamestate->nextState('killLoss');
         } else { // block reveal prompt
             self::setGameStateValue('reasonChoose', REASON_CHALLENGE);
             $this->gamestate->changeActivePlayer($playerBlock);
             $this->gamestate->nextState('askChooseCard');
+        }
+    }
+
+    public function stKillLoss()
+    {
+        $playerKill = self::getGameStateValue('playerKill');
+        if ($playerKill > 0) {
+            $cardKill = self::getGameStateValue('cardKill');
+            if ($cardKill == 0) {
+                // Can we auto-select?
+                $hand = $this->getCardIds('hand', $playerKill);
+                if (count($hand) == 1) {
+                    $cardKill = array_shift($hand);
+                }
+            }
+
+            if ($cardKill > 0) { // kill
+                $this->doKill($playerKill, REASON_LOSS, $cardKill);
+                if (!$this->checkWin()) {
+                    $this->gamestate->nextState('execute');
+                }
+            } else { // prompt
+                self::setGameStateValue('reasonChoose', REASON_LOSS);
+                $this->gamestate->changeActivePlayer($playerKill);
+                $this->gamestate->nextState('askChooseCard');
+            }
+        } else { // continue
+            $this->gamestate->nextState('execute');
         }
     }
 
@@ -1317,12 +1336,13 @@ class coupcitystate extends Table
         $action_ref = $this->actions[$action];
         $playerTurn = self::getGameStateValue('playerTurn');
         $playerBlock = self::getGameStateValue('playerBlock');
+        $skipExecute = self::getGameStateValue('skipExecute');
 
         // If not blocked, action occurs
         // Determine how to log it
-        $transition = 'killLoss';
+        $logAs = 'wealthInstant';
+        $transition = 'playerEnd';
         $target = self::getGameStateValue('playerTarget');
-        $logAs = 'wealth';
         $args = array(
             'i18n' => array(),
             'action' => $action,
@@ -1330,7 +1350,7 @@ class coupcitystate extends Table
             'player_name' => $this->getName($playerTurn)
         );
 
-        if ($playerBlock == 0) { // not blocked
+        if ($skipExecute == 0 && $playerBlock == 0) { // not blocked
             switch ($action) {
             case INCOME:
             case FOREIGN_AID:
@@ -1343,14 +1363,17 @@ class coupcitystate extends Table
 
             case COUP:
             case ASSASSINATE:
+                $logAs = 'wealth';
+                $transition = 'killCoup';
                 $args['balloon'] = $this->balloons['kill'];
                 $args['wealth'] = $this->addWealth($playerTurn, $action_ref['cost'] * -1);
                 self::incStat($action_ref['cost'], 'wealthOut', $playerTurn);
-                $transition = 'killCoup';
                 break;
 
             case EXCHANGE:
             case EXCHANGE1:
+                $logAs = 'draw';
+                $transition = 'askDiscard';
                 $args['balloon'] = $this->balloons['draw'];
                 $args['count'] = $action_ref['count'];
                 $newCards = $this->cards->pickCards($args['count'], 'deck', $playerTurn);
@@ -1359,8 +1382,6 @@ class coupcitystate extends Table
                     'player_id' => $playerTurn,
                     'cards' => $newCards
                 ));
-                $transition = 'askDiscard';
-                $logAs = 'draw';
                 break;
 
             case STEAL:
@@ -1375,6 +1396,7 @@ class coupcitystate extends Table
                 break;
 
             case CONVERT:
+                $logAs = 'convert';
                 $args['amount'] = $target == $playerTurn ? 1 : 2;
                 // Transfer money from player to almshouse
                 $almshouse = self::getGameStateValue('almshouse') + $args['amount'];
@@ -1385,7 +1407,6 @@ class coupcitystate extends Table
                     'almshouse' => $almshouse
                 ));
                 // Switch faction (balloon is spoken by convert)
-                $logAs = 'convert';
                 $args['balloon'] = $this->balloons['convert'];
                 $args['player_id'] = $target;
                 $args['faction'] = $this->toggleFaction($target);
@@ -1404,6 +1425,8 @@ class coupcitystate extends Table
                 break;
 
             case EXAMINE:
+                $logAs = 'balloonInstant';
+                $transition = 'askExamine';
                 $cardExamine = self::getGameStateValue('cardExamine');
                 if ($cardExamine == 0) {
                     $hand = $this->getCardIds('hand', $target);
@@ -1419,12 +1442,9 @@ class coupcitystate extends Table
                         return;
                     }
                 }
-
-                // Activate turn player (if needed)
+                // Re-activate turn player
                 $this->gamestate->changeActivePlayer($playerTurn);
                 $args['balloon'] = $this->balloons['examine'];
-                $logAs = 'balloonInstant';
-                $transition = 'askExamine';
                 break;
             }
 
@@ -1440,7 +1460,7 @@ class coupcitystate extends Table
             }
             $stat = array_key_exists('stat', $action_ref) ? $action_ref['stat'] : "action$action";
             self::incStat(1, $stat, $playerTurn);
-        } else { // blocked
+        } else { // blocked or skipped
             $this->doBalloon('balloonInstant', clienttranslate('${player_name}\'s ${action_name} does not occur.'), array(
                 'i18n' => array('action_name'),
                 'player_id' => $playerTurn,
@@ -1448,10 +1468,10 @@ class coupcitystate extends Table
                 'action_name' => $action_ref['name'],
                 'balloon' => ''
             ));
-            if ($action == ASSASSINATE) {
+            if ($playerBlock != 0 && $action == ASSASSINATE) {
                 // Still must pay if blocked
                 $wealth = $this->addWealth($playerTurn, -3);
-                self::notifyAllPlayers('wealth', '', array(
+                self::notifyAllPlayers('wealthInstant', '', array(
                     'player_id' => $playerTurn,
                     'wealth' => $wealth
                 ));
@@ -1484,35 +1504,18 @@ class coupcitystate extends Table
     {
         $playerTarget = self::getGameStateValue('playerTarget');
         if ($playerTarget > 0) {
-            $playerKill = self::getGameStateValue('playerKill');
             $cardCoup = self::getGameStateValue('cardCoup');
-            $cardCoup2 = 0;
-            $reason = 3;
-            $hand = $this->getCardIds('hand', $playerTarget);
-            $doubleElimination = count($hand) == 2 && $playerTarget == $playerKill;
-            if ($doubleElimination || ($cardCoup == 0 && count($hand) == 1)) {
-                // Can we auto-select or double eliminate?
-                $cardCoup = array_shift($hand);
-                if ($doubleElimination) {
-                    $cardCoup2 = array_shift($hand);
-                    $reason = 4;
+            if ($cardCoup == 0) {
+                // Can we auto-select?
+                $hand = $this->getCardIds('hand', $playerTarget);
+                if (count($hand) == 1) {
+                    $cardCoup = array_shift($hand);
                 }
             }
 
             if ($cardCoup > 0) { // kill
-                $playerTurn = self::getGameStateValue('playerTurn');
-                $eliminated = $this->doKill($playerTarget, $playerTurn, $reason, $cardCoup, $cardCoup2);
-                if ($eliminated) {
-                    // Can't kill this player again if eliminated
-                    if ($playerTarget == $playerKill) {
-                        self::setGameStateValue('playerKill', 0);
-                    }
-                }
-
-                // Check for a winner, or continue
-                if (!$this->checkWin()) {
-                    $this->gamestate->nextState('killLoss');
-                }
+                $this->doKill($playerTarget, REASON_KILL, $cardCoup);
+                $this->gamestate->nextState('playerEnd');
             } else { // prompt
                 $playerTurn = self::getGameStateValue('playerTurn');
                 self::setGameStateValue('reasonChoose', REASON_KILL);
@@ -1520,36 +1523,10 @@ class coupcitystate extends Table
                 $this->gamestate->nextState('askChooseCard');
             }
         } else { // continue
-            $this->gamestate->nextState('killLoss');
-        }
-    }
-
-    public function stKillLoss()
-    {
-        $playerKill = self::getGameStateValue('playerKill');
-        if ($playerKill > 0) {
-            $cardKill = self::getGameStateValue('cardKill');
-            $reason = 2;
-            if ($cardKill == 0) {
-                // Can we auto-select?
-                $hand = $this->getCardIds('hand', $playerKill);
-                if (count($hand) == 1) {
-                    $cardKill = array_shift($hand);
-                }
-            }
-
-            if ($cardKill > 0) { // kill
-                $this->doKill($playerKill, 0, $reason, $cardKill);
-                $this->gamestate->nextState('playerEnd');
-            } else { // prompt
-                self::setGameStateValue('reasonChoose', REASON_LOSS);
-                $this->gamestate->changeActivePlayer($playerKill);
-                $this->gamestate->nextState('askChooseCard');
-            }
-        } else { // continue
             $this->gamestate->nextState('playerEnd');
         }
     }
+
 
     //////////////////////////////////////////////////////////////////////////////
     //////////// Zombie
