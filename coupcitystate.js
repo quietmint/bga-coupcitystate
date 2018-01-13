@@ -34,6 +34,12 @@ define([
             format_string_recursive: function(str, args) {
                 if (str && args && !args.formatted) {
                     args.formatted = true;
+                    if (args.player_name && !args.player_name.startsWith('<')) {
+                        args.player_name = this.format_player_name(args.player_name);
+                    }
+                    if (args.player_name2 && !args.player_name2.startsWith('<')) {
+                        args.player_name2 = this.format_player_name(args.player_name2);
+                    }
                     if (args.card_name) {
                         args.card_name = this.format_character_name(args.card_name);
                     }
@@ -48,6 +54,20 @@ define([
                     }
                 }
                 return this.inherited(arguments);
+            },
+
+            format_player_name: function(player_name) {
+                for (var id in this.gamedatas.players) {
+                    var player = this.gamedatas.players[id];
+                    if (player_name == player.player_name) {
+                        var bg = '';
+                        if (player.color_back) {
+                            bg = '; background-color: #' + player.color_back;
+                        }
+                        return '<span style="font-weight: bold; color: #' + player.color + bg + '">' + player_name + '</span>';
+                    }
+                }
+                return player_name;
             },
 
             format_character_name: function(character_name) {
@@ -285,10 +305,10 @@ define([
                             this.addActionButton('button_no', _('I allow'), 'onActionNo');
                             if (args != null) {
                                 if (args.card_name != null) {
-                                    var str = this.format_string_recursive(_('I challenge ${player_name2}\'s ${card_name}'), args);
+                                    var str = this.format_string_recursive(_('I challenge your ${card_name}'), args);
                                     this.addActionButton('button_yes', str, 'onActionYes');
                                 } else if (args.forbid != null) {
-                                    var str = this.format_string_recursive(_('I challenge ${player_name2}'), args);
+                                    var str = this.format_string_recursive(_('I challenge'), args);
                                     this.addActionButton('button_yes', str, 'onActionYes');
                                 }
 
