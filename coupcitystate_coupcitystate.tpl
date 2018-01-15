@@ -2,20 +2,18 @@
 <div id="game_wrap">
   <div id="myactions">
     <div class="actionrowhead">{I18N_Actions}:</div>
-    <div class="actionrow">
-      <!-- BEGIN action -->
-      <div class="action action-{action_id}" data-action="{action_id}">
-        <i class="icon-action-{action_id} mdi {icon}"></i>
-        <div class="actiondesc">
-          <div class="actionhead">
-            {name}
-            <div class="actionwho">{claimHtml}</div>
-          </div>
-          {text} {blockHtml}
+    <!-- BEGIN action -->
+    <div class="action action-{action_id}" data-action="{action_id}">
+      <i class="icon-action-{action_id} mdi {icon}"></i>
+      <div class="actiondesc">
+        <div class="actionhead">
+          {name}
+          <div class="actionwho">{claimHtml}</div>
         </div>
+        {text} {blockHtml}
       </div>
-      <!-- END action -->
     </div>
+    <!-- END action -->
   </div>
 
   <div id="circle" class="circle-{player_count}">

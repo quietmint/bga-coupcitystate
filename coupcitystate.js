@@ -259,7 +259,7 @@ define([
             //
             onEnteringState: function(stateName, args) {
                 console.info('Entering state: ' + stateName, args.args);
-                if (stateName == 'playerStart') {
+                if (stateName == 'playerBegin') {
                     var active = this.getActivePlayerId();
                     dojo.query('.placemat.active').removeClass('active');
                     dojo.addClass('placemat_' + active, 'active');
@@ -267,7 +267,7 @@ define([
 
                 if (this.isCurrentPlayerActive()) {
                     switch (stateName) {
-                        case 'playerStart':
+                        case 'playerBegin':
                         case 'askChooseCard':
                             this.tableau[this.player_id].setSelectionMode(1);
                             break;
@@ -286,7 +286,7 @@ define([
                 console.info('Leaving state: ' + stateName);
                 if (!this.isSpectator) {
                     this.stopPassTimer();
-                    if (stateName == 'playerStart') {
+                    if (stateName == 'playerBegin') {
                         dojo.query('.placemat.selected').removeClass('selected');
                     }
                     this.tableau[this.player_id].setSelectionMode(0);

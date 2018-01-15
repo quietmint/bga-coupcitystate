@@ -152,10 +152,13 @@
 }
 
 #myactions {
+  display: flex;
   flex: 0 1 auto;
+  flex-wrap: wrap;
 }
 
 .actionrowhead {
+  flex: 1 0 100%;
   font-size: 15px;
   text-align: center;
   line-height: 24px;
@@ -163,16 +166,11 @@
   text-transform: uppercase;
 }
 
-.actionrow {
-  display: flex;
-  flex-wrap: wrap;
-}
-
 .action {
   flex: 1 0 215px;
   margin: 0 0 5px 5px;
   background: rgba(255, 255, 255, 0.33);
-  padding: 6px;
+  padding: 5px;
   cursor: pointer;
   font-size: 14px;
   line-height: 100%;
@@ -202,7 +200,7 @@
 }
 
 .action .actionhead {
-  font-size: 18px;
+  font-size: 17px;
   line-height: 24px;
   font-weight: 800;
   font-variant: small-caps;
@@ -358,7 +356,7 @@
   padding: 5px 0 2px 5px;
   border: 2px dashed transparent;
   border-radius: 5px;
-  transition: border 500ms ease, background 2s ease;
+  transition: border 250ms ease, background 2s ease;
   cursor: pointer;
 }
 
@@ -366,7 +364,6 @@
   cursor: pointer !important;
 }
 
-.placemat.mine .stockitem_unselectable,
 .placemat.eliminated .stockitem_unselectable {
   cursor: default !important;
 }
@@ -374,8 +371,6 @@
 .placemat.selected {
   border-color: white;
 }
-
-.placemat.active {}
 
 .placemat.eliminated {
   border-color: rgba(0, 0, 0, 0.33);
@@ -556,7 +551,7 @@
   body:not(.logs_on_additional_column) #game_wrap {
     flex-wrap: nowrap;
   }
-  body:not(.logs_on_additional_column) .actionrow {
+  body:not(.logs_on_additional_column) #myactions {
     display: block;
   }
   body:not(.logs_on_additional_column) .action .actionwho {
@@ -568,7 +563,7 @@
   #game_wrap {
     flex-wrap: nowrap;
   }
-  .actionrow {
+  #myactions {
     display: block;
   }
   .action .actionwho {
