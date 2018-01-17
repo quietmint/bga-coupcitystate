@@ -427,25 +427,38 @@ class coupcitystate extends Table
         ));
     }
 
+    public function doAutoChoose($player_id)
+    {
+        // Auto-select card from hand if only one
+        $hand = $this->getCardIds('hand', $player_id);
+        $count = count($hand);
+        if ($count > 1) {
+            return 0; // multiple cards
+        } elseif ($count == 1) {
+            return array_shift($hand);
+        } else {
+            return -1; // eliminated
+        }
+    }
+
     public function doKill($player_id, $reason, $card_id)
     {
+        $card = $this->getCard($card_id);
         $this->cards->moveCard($card_id, 'tableau', $player_id);
         $handCount = $this->cards->countCardInLocation('hand', $player_id);
-        $card = $this->getCard($card_id);
         if ($handCount == 0) {
             $msg = clienttranslate('${player_name} loses the ${card_name} and is eliminated!');
         } else {
             $msg = clienttranslate('${player_name} loses the ${card_name}.');
         }
-        $args = array(
+        $this->doBalloon('reveal', $msg, array(
             'i18n' => array('card_name'),
             'player_id' => $player_id,
             'player_name' => $this->getName($player_id),
             'card_name' => $card['name'],
             'cards' => array($card),
             'balloon' => $this->balloons['die']
-        );
-        $this->doBalloon('reveal', $msg, $args);
+        ));
 
         // Check for elimination
         if ($handCount == 0) {
@@ -1304,30 +1317,24 @@ class coupcitystate extends Table
 
     public function stKillLoss()
     {
+        $nextState = 'execute';
         $playerKill = self::getGameStateValue('playerKill');
         if ($playerKill > 0) {
-            $cardKill = self::getGameStateValue('cardKill');
-            if ($cardKill == 0) {
-                // Can we auto-select?
-                $hand = $this->getCardIds('hand', $playerKill);
-                if (count($hand) == 1) {
-                    $cardKill = array_shift($hand);
-                }
-            }
-
+            $cardKill = self::getGameStateValue('cardKill') ?: $this->doAutoChoose($playerKill);
             if ($cardKill > 0) { // kill
                 $this->doKill($playerKill, REASON_LOSS, $cardKill);
-                if (!$this->checkWin()) {
-                    $this->gamestate->nextState('execute');
+                if ($this->checkWin()) {
+                    return;
                 }
-            } else { // prompt
+            } elseif ($cardKill == 0) { // prompt
                 self::setGameStateValue('reasonChoose', REASON_LOSS);
                 $this->gamestate->changeActivePlayer($playerKill);
-                $this->gamestate->nextState('askChooseCard');
+                $nextState = 'askChooseCard';
+            } else { // already eliminated
+                self::warn("stKillLoss: Nothing to do for playerKill=$playerKill, cardKill=$cardKill");
             }
-        } else { // continue
-            $this->gamestate->nextState('execute');
         }
+        $this->gamestate->nextState($nextState);
     }
 
     public function stExecute()
@@ -1497,34 +1504,26 @@ class coupcitystate extends Table
             'card_name' => $card['name'],
             'alive' => true,
             'secret' => true,
-      ));
+        ));
     }
 
     public function stKillCoup()
     {
+        $nextState = 'playerEnd';
         $playerTarget = self::getGameStateValue('playerTarget');
         if ($playerTarget > 0) {
-            $cardCoup = self::getGameStateValue('cardCoup');
-            if ($cardCoup == 0) {
-                // Can we auto-select?
-                $hand = $this->getCardIds('hand', $playerTarget);
-                if (count($hand) == 1) {
-                    $cardCoup = array_shift($hand);
-                }
-            }
-
+            $cardCoup = self::getGameStateValue('cardCoup') ?: $this->doAutoChoose($playerTarget);
             if ($cardCoup > 0) { // kill
                 $this->doKill($playerTarget, REASON_KILL, $cardCoup);
-                $this->gamestate->nextState('playerEnd');
-            } else { // prompt
-                $playerTurn = self::getGameStateValue('playerTurn');
+            } elseif ($cardCoup == 0) { // prompt
                 self::setGameStateValue('reasonChoose', REASON_KILL);
                 $this->gamestate->changeActivePlayer($playerTarget);
-                $this->gamestate->nextState('askChooseCard');
+                $nextState = 'askChooseCard';
+            } else { // already eliminated
+                self::warn("stKillCoup: Nothing to do for playerTarget=$playerTarget, cardCoup=$cardCoup");
             }
-        } else { // continue
-            $this->gamestate->nextState('playerEnd');
         }
+        $this->gamestate->nextState($nextState);
     }
 
 
@@ -1554,7 +1553,12 @@ class coupcitystate extends Table
             if ($state['name'] == 'askChooseCard') {
                 $this->actionChooseCard($hand[0]);
             } elseif ($state['name'] == 'askDiscard') {
-                $this->actionDiscard(array($hand[0], $hand[1]));
+                $action = self::getGameStateValue('action');
+                $action_ref = $this->actions[$action];
+                $discard = array_slice($hand, 0, $action_ref['count']);
+                $this->actionDiscard($discard);
+            } elseif ($state['name'] == 'askExamine') {
+                $this->actionExamineKeep();
             } else {
                 throw new BgaVisibleSystemException('Zombie player ' . $active_player . ' stuck in unexpected state ' . $state['name']);
             }
@@ -1581,15 +1585,5 @@ class coupcitystate extends Table
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
-
-        if ($from_version <= 1709251328) {
-            self::DbQuery('ALTER TABLE `player` ADD `balloon` MEDIUMTEXT');
-        }
-        if ($from_version <= 1712281820) {
-            self::DbQuery('ALTER TABLE `player` ADD `round_eliminated` INT NOT NULL DEFAULT 0');
-        }
-        if ($from_version <= 1801020629) {
-            self::DbQuery('ALTER TABLE `player` ADD `faction` INT NOT NULL DEFAULT 0;');
-        }
     }
 }

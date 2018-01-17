@@ -22,10 +22,6 @@ define([
         "ebg/stock"
     ],
     function(dojo, declare, domAttr) {
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-
         return declare("bgagame.coupcitystate", ebg.core.gamegui, {
             constructor: function() {},
 
