@@ -16,6 +16,10 @@
 @import url(../../../css/csslayer.css);
 @import url('https://fonts.googleapis.com/css?family=Alegreya:500,500i,700,800&subset=latin-ext');
 @import url('https://cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css');
+#page-title .action-button.bgabutton {
+  min-width: 100px;
+}
+
 /* Characters and Factions */
 
 .character-name,
