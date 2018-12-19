@@ -24,27 +24,6 @@
  */
 
 $game_options = array(
-    100 => array(
-        'name' => totranslate('Rounds to win'),
-        'values' => array(
-            1 => array(
-                'name' => '1'
-            ),
-            2 => array(
-                'name' => '2',
-                'tmdisplay' => totranslate('2 rounds to win')
-            ),
-            3 => array(
-                'name' => '3',
-                'tmdisplay' => totranslate('3 rounds to win')
-            ),
-            4 => array(
-                'name' => '4',
-                'tmdisplay' => totranslate('4 rounds to win')
-            ),
-        ),
-    ),
-
     101 => array(
         'name' => totranslate('Factions'),
         'values' => array(

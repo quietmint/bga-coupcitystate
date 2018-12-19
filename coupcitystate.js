@@ -181,7 +181,7 @@ define([
                     var player = gamedatas.players[player_id];
 
                     // Reset elimination status
-                    if (+player.eliminated || +player.round_eliminated) {
+                    if (+player.eliminated) {
                         this.notif_eliminate({
                             args: {
                                 player_id: player_id
