@@ -488,6 +488,14 @@ class coupcitystate extends Table
         self::notifyAllPlayers('eliminate', '', array(
             'player_id' => $player_id
         ));
+
+        $requiredScore = self::getGameStateValue('requiredScore');
+        $round = self::getGameStateValue('round');
+        if ($round == $requiredScore && $requiredScore == 1) {
+            // Last round => eliminate forever
+            $forever = true;
+        }
+
         if ($forever) {
             self::eliminatePlayer($player_id);
         }
@@ -1484,6 +1492,10 @@ class coupcitystate extends Table
                 ));
                 self::incStat(3, 'wealthOut', $playerTurn);
             }
+        }
+
+        if ($transition == 'askDiscard') {
+            $this->gamestate->changeActivePlayer($playerTurn);
         }
 
         $this->gamestate->nextState($transition);
