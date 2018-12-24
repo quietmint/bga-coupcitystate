@@ -1269,6 +1269,9 @@ class coupcitystate extends Table
         $playerBlock = self::getGameStateValue('playerBlock');
         $skipExecute = self::getGameStateValue('skipExecute');
 
+        // Ensure active player is correct
+        $this->gamestate->changeActivePlayer($playerTurn);
+
         // If not blocked, action occurs
         // Determine how to log it
         $logAs = 'wealthInstant';
@@ -1361,7 +1364,19 @@ class coupcitystate extends Table
                 $cardExamine = self::getGameStateValue('cardExamine');
                 if ($cardExamine == 0) {
                     $hand = $this->getCardIds('hand', $target);
-                    if (count($hand) == 1) {
+                    $handCount = count($hand);
+                    if ($handCount == 0) {
+                        // Target has no cards (lost challenge)
+                        $this->doBalloon('balloonInstant', clienttranslate('${player_name}\'s ${action_name} does not occur.'), array(
+                            'i18n' => array('action_name'),
+                            'player_id' => $playerTurn,
+                            'player_name' => $this->getName($playerTurn),
+                            'action_name' => $action_ref['name'],
+                            'balloon' => ''
+                        ));
+                        $this->gamestate->nextState('playerEnd');
+                        return;
+                    } elseif ($handCount == 1) {
                         // Auto-select only card
                         $cardExamine = array_shift($hand);
                         self::setGameStateValue('cardExamine', $cardExamine);
@@ -1373,8 +1388,6 @@ class coupcitystate extends Table
                         return;
                     }
                 }
-                // Re-activate turn player
-                $this->gamestate->changeActivePlayer($playerTurn);
                 $args['balloon'] = $this->balloons['examine'];
                 break;
             }
@@ -1408,10 +1421,6 @@ class coupcitystate extends Table
                 ));
                 self::incStat(3, 'wealthOut', $playerTurn);
             }
-        }
-
-        if ($transition == 'askDiscard') {
-            $this->gamestate->changeActivePlayer($playerTurn);
         }
 
         $this->gamestate->nextState($transition);
