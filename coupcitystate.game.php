@@ -611,7 +611,7 @@ class coupcitystate extends Table
         self::incStat(1, 'challengeReceived', $player);
 
         if ($action_ref['forbid'] > 0) {
-            $this->doBalloon('balloon', clienttranslate('${player_name} challenges ${player_name2} to reveal all cards!'), array(
+            $this->doBalloon('balloonPause', clienttranslate('${player_name} challenges ${player_name2} to reveal all cards!'), array(
                 'player_id' => $player_id,
                 'player_name' => $this->getName($player_id),
                 'player_name2' => $this->getName($player),
@@ -619,8 +619,8 @@ class coupcitystate extends Table
             ));
             $this->gamestate->nextState('yesAll');
         } else {
-            // Delay if target is auto-choosing
-            $balloonType = $this->cards->countCardInLocation('hand', $player) == 1 ? 'balloon' : 'balloonInstant';
+            // Longer delay if target is auto-choosing
+            $balloonType = $this->cards->countCardInLocation('hand', $player) == 1 ? 'balloon' : 'balloonPause';
             $this->doBalloon($balloonType, clienttranslate('${player_name} challenges ${player_name2} to reveal the ${card_name}!'), array(
                 'i18n' => array('card_name'),
                 'player_id' => $player_id,
@@ -647,7 +647,7 @@ class coupcitystate extends Table
         self::incStat(1, $lie ? 'lie' : 'truth', $player_id);
         $this->updateHonesty($player_id);
 
-        $this->doBalloon('balloonInstant', clienttranslate('${player_name} claims the ${card_name} to block ${player_name2}...'), array(
+        $this->doBalloon('balloonPause', clienttranslate('${player_name} claims the ${card_name} to block ${player_name2}...'), array(
             'i18n' => array('card_name'),
             'player_id' => $player_id,
             'player_name' => $this->getName($player_id),

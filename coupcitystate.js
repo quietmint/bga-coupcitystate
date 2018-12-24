@@ -628,7 +628,9 @@ define([
                 this.notifqueue.setSynchronous('wealth', 2000);
 
                 dojo.subscribe('balloonInstant', this, 'notif_balloon');
+                dojo.subscribe('balloonPause', this, 'notif_balloon');
                 dojo.subscribe('balloon', this, 'notif_balloon');
+                this.notifqueue.setSynchronous('balloonPause', 1000);
                 this.notifqueue.setSynchronous('balloon', 2000);
 
                 dojo.subscribe('revealInstant', this, 'notif_reveal');
