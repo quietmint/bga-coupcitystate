@@ -455,13 +455,6 @@ class coupcitystate extends Table
 
     public function eliminate($player_id, $forever=false)
     {
-        // Erase money
-        self::DbQuery("UPDATE player SET player_wealth = 0 WHERE player_id = $player_id");
-        self::notifyAllPlayers('wealthInstant', '', array(
-            'player_id' => $player_id,
-            'wealth' => 0
-        ));
-
         // Reveal cards in hand
         $hand = array_values($this->cards->getCardsInLocation('hand', $player_id));
         if (count($hand) > 0) {

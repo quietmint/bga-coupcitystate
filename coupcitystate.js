@@ -186,7 +186,7 @@ define([
                             args: {
                                 player_id: player_id
                             }
-                        }, true);
+                        });
                     } else {
                         dojo.removeClass('placemat_' + player_id, 'eliminated');
                         dojo.removeClass('overall_player_board_' + player_id, 'eliminated');
@@ -616,7 +616,6 @@ define([
             */
             setupNotifications: function() {
                 dojo.subscribe('roundBegin', this, 'notif_roundBegin');
-                dojo.subscribe('tableInfosChanged', this, 'notif_tableInfosChanged');
                 dojo.subscribe('eliminate', this, 'notif_eliminate');
                 dojo.subscribe('scores', this, 'notif_scores');
 
@@ -653,25 +652,10 @@ define([
                 this.roundBegin(n.args);
             },
 
-            notif_tableInfosChanged: function(n) {
-                // Detect player elimination
-                if (n.args.reload_reason == 'playerElimination') {
-                    this.notif_eliminate({
-                        args: {
-                            player_id: n.args.who_quits
-                        }
-                    });
-                }
-            },
-
-            notif_eliminate: function(n, fromInit) {
+            notif_eliminate: function(n) {
                 var player_id = n.args.player_id;
                 dojo.addClass('placemat_' + player_id, 'eliminated');
                 dojo.addClass('overall_player_board_' + player_id, 'eliminated');
-                if (!fromInit) {
-                    n.args.wealth = 0;
-                    this.notif_wealth(n);
-                }
             },
 
             notif_scores: function(n) {
