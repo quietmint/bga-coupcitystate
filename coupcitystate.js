@@ -419,9 +419,9 @@ define([
                 // Auto pass timer after 15 seconds, unless dialog visible or in replay mode
                 var dialogList = dojo.query('.dijitDialogUnderlayWrapper');
                 var isDialog = dialogList.length > 0 && dialogList[0].style.display != 'none';
-                var isReplay = document.getElementById('previously_on').style.display == 'block';
+                var isReplay = window.g_archive_mode || window.g_replayFrom || document.getElementById('previously_on').style.display == 'block';
                 var button_pass = document.getElementById(id);
-                if (!window.passIntervalId && !isDialog && !isReplay && typeof g_replayFrom == 'undefined' && button_pass != null) {
+                if (!window.passIntervalId && !isDialog && !isReplay && button_pass != null) {
                     var stop = this.stopPassTimer;
                     stop();
                     var html = button_pass.innerHTML;
