@@ -68,14 +68,11 @@ class view_coupcitystate_coupcitystate extends game_view
                 'action_id' => $action,
                 'icon' => $action_ref['icon'],
                 'name' => self::_($action_ref['name']),
+                'text1' => self::_($action_ref['text1']),
+                'text2' => self::_($action_ref['text2']),
                 'blockHtml' => self::_('Cannot block.'),
                 'claimHtml' => '',
             );
-
-            // Translate all action text
-            $args['text'] = join(' ', array_map(function ($value) {
-                return self::_($value);
-            }, $action_ref['text']));
 
             if (count($action_ref['blockers']) > 0) {
                 $card_name = '';

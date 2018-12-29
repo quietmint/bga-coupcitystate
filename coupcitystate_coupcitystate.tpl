@@ -10,7 +10,7 @@
           {name}
           <div class="actionwho">{claimHtml}</div>
         </div>
-        {text} {blockHtml}
+        {text1} {text2} {blockHtml}
       </div>
     </div>
     <!-- END action -->

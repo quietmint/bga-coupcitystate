@@ -70,7 +70,7 @@ define([
                 for (var character in this.gamedatas.characters) {
                     var character_ref = this.gamedatas.characters[character];
                     if (character_name == character_ref.name) {
-                        return '<div class="character-name character-' + character + '">' + character_name + '</div>';
+                        return '<div class="character-name character-' + character + '">' + _(character_name) + '</div>';
                     }
                 }
                 return character_name;
@@ -80,7 +80,7 @@ define([
                 for (var faction in this.gamedatas.factions) {
                     var faction_ref = this.gamedatas.factions[faction];
                     if (faction_name == faction_ref.name) {
-                        return '<div class="faction-name faction-' + faction + '"><i class="mdi ' + faction_ref.icon + '"></i> ' + faction_name + '</div>';
+                        return '<div class="faction-name faction-' + faction + '"><i class="mdi ' + faction_ref.icon + '"></i> ' + _(faction_name) + '</div>';
                     }
                 }
                 return faction_name;
@@ -118,6 +118,13 @@ define([
                 if (gamedatas.variantFactions) {
                     dojo.removeClass('almshouse', 'hide');
                 }
+
+                // Translate "my actions"
+                dojo.query('#myactions .character-name').forEach(function(e) {
+                    var character = e.className.match(/character-(\d+)/)[1];
+                    var character_ref = gamedatas.characters[character];
+                    e.innerHTML = _(character_ref.name);
+                });
 
                 this.tableau = {};
                 for (var player_id in gamedatas.players) {
