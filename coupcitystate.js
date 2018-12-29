@@ -233,12 +233,14 @@ define([
                     }
 
                     // Add secret cards
+                    var player_hand = player.hand;
                     if (player_id == this.player_id) {
-                        if (gamedatas.hand) {
-                            for (var i in gamedatas.hand) {
-                                var card = gamedatas.hand[i];
-                                myCards.addToStockWithId(+card.type, +card.id, 'deckcard');
-                            }
+                        player_hand = gamedatas.hand;
+                    }
+                    if (player_hand) {
+                        for (var i in player_hand) {
+                            var card = player_hand[i];
+                            myCards.addToStockWithId(+card.type, +card.id, 'deckcard');
                         }
                     } else {
                         this.addUnknownCards(myCards, player.handCount, 'deckcard');

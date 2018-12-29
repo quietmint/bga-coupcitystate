@@ -248,8 +248,13 @@ class coupcitystate extends Table
                 $players[$player_id]['balloon'] = unserialize($player['balloon']);
             }
             if ($cards) {
-                $players[$player_id]['handCount'] = intval($this->cards->countCardInLocation('hand', $player_id));
                 $players[$player_id]['tableau'] = array_values($this->cards->getCardsInLocation('tableau', $player_id));
+                if ($players[$player_id]['score'] > 0) {
+                    // Reveal winner's cards in hand
+                    $players[$player_id]['hand'] = array_values($this->cards->getCardsInLocation('hand', $player_id));
+                } else {
+                    $players[$player_id]['handCount'] = intval($this->cards->countCardInLocation('hand', $player_id));
+                }
             }
         }
         return $players;
@@ -486,7 +491,19 @@ class coupcitystate extends Table
         // Count active players
         $players = $this->getActivePlayerIds();
         if (count($players) == 1) { // win
-            self::DbQuery("UPDATE player SET player_score = 1 WHERE player_id = $players[0]");
+            // Reveal winner's cards in hand
+            $winner = $players[0];
+            $hand = array_values($this->cards->getCardsInLocation('hand', $winner));
+            if (count($hand) > 0) {
+                $card_ids = array_column($hand, 'id');
+                self::notifyAllPlayers('revealInstant', '', array(
+                    'player_id' => $winner,
+                    'cards' => $hand,
+                    'alive' => true
+                ));
+            }
+
+            self::DbQuery("UPDATE player SET player_score = 1 WHERE player_id = $winner");
             $this->gamestate->nextState('roundEnd');
             return true;
         }
