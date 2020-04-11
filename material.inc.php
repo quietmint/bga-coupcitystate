@@ -69,7 +69,7 @@ $this->actions = array(
     ),
     CONVERT => array(
        'name' => clienttranslate('Convert'),
-       'icon' => 'mdi-account-convert',
+       'icon' => 'mdi-account-switch-outline',
        'text1' => clienttranslate('Pay almshouse.'),
        'text2' => clienttranslate('Choose player to change faction.'),
        'balloonAttempt' => '',
@@ -84,7 +84,7 @@ $this->actions = array(
     ),
     EMBEZZLE => array(
        'name' => clienttranslate('Embezzle'),
-       'icon' => 'mdi-home-heart',
+       'icon' => 'mdi-charity',
        'text1' => clienttranslate('Steal from almshouse.'),
        'text2' => '',
        'balloonAttempt' => clienttranslate('I will steal from the almshouse...'),
@@ -99,7 +99,7 @@ $this->actions = array(
     ),
     TAX => array(
        'name' => clienttranslate('Tax'),
-       'icon' => 'mdi-seal',
+       'icon' => 'mdi-sack-percent',
        'text1' => clienttranslate('Take ₤3.'),
        'text2' => '',
        'balloonAttempt' => clienttranslate('I will collect tax...'),
@@ -239,7 +239,7 @@ $this->factions = array(
     ),
     2 => array(
         'name' => clienttranslate('Populist'),
-        'icon' => 'mdi-pillar',
+        'icon' => 'mdi-party-popper',
     ),
 );
 

@@ -164,18 +164,19 @@ class coupcitystate extends Table
         self::initStat('player', 'challengeWin', 0);
         self::initStat('player', 'challengeLoss', 0);
 
-        // Create 3 cards of each type
+        // Create 3 or 4 cards of each type
+        $copies = count($players) >= 7 ? 4 : 3;
         $cards = array();
         foreach ($this->characters as $character => $character_ref) {
             if ($character == 0 || !$this->meetsVariant($character_ref['variant'])) {
                 continue;
             }
-            $cards[] = array('type' => "$character", 'type_arg' => 0, 'nbr' => 3);
+            $cards[] = array('type' => "$character", 'type_arg' => 0, 'nbr' => $copies);
         }
         $this->cards->createCards($cards, 'deck');
         self::notifyAllPlayers('message', clienttranslate('The deck has ${size} cards with ${copies} copies of each character.'), array(
-            'size' => 15,
-            'copies' => 3
+            'size' => count($cards) * $copies,
+            'copies' => $copies
         ));
 
         // Activate first player (which is in general a good idea :) )

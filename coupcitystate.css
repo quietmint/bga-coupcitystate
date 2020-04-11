@@ -15,562 +15,621 @@
 
 @import url(../../../css/csslayer.css);
 @import url('https://fonts.googleapis.com/css?family=Alegreya:500,500i,700,800&subset=latin-ext');
-@import url('https://cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css');
 #page-title .action-button.bgabutton {
-  min-width: 100px;
+    min-width: 100px;
 }
+
 
 /* Characters and Factions */
 
 .character-name,
 .faction-name {
-  display: inline-block;
-  border-radius: 3px;
-  color: white;
-  font: normal 500 90%/110% 'Roboto', Arial, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  text-shadow: 0 0 3px black;
-  padding: 1px 4px;
-  margin: 0 1px;
+    display: inline-block;
+    border-radius: 3px;
+    color: white;
+    font: normal 500 90%/110% 'Roboto', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    text-shadow: 0 0 3px black;
+    padding: 1px 4px;
+    margin: 0 1px;
 }
 
 .dijitTooltip .character-name {
-  font-size: 14px;
+    font-size: 14px;
 }
+
 
 /* Duke */
 
 .character-name.character-1 {
-  background-color: #9C27B0;
+    background-color: #9C27B0;
 }
 
 .icon-action-4 {
-  color: #6A1B9A !important;
+    color: #6A1B9A !important;
 }
+
 
 /* Assassin */
 
 .character-name.character-2 {
-  background-color: #795548;
+    background-color: #795548;
 }
 
 .icon-action-5 {
-  color: #4E342E !important;
+    color: #4E342E !important;
 }
+
 
 /* Ambassador */
 
 .character-name.character-3 {
-  background-color: #689F38;
+    background-color: #689F38;
 }
 
 .icon-action-6 {
-  color: #33691E !important;
+    color: #33691E !important;
 }
+
 
 /* Captain */
 
 .character-name.character-4 {
-  background-color: #2962FF;
+    background-color: #2962FF;
 }
 
 .icon-action-7 {
-  color: #0D47A1 !important;
+    color: #0D47A1 !important;
 }
+
 
 /* Contessa */
 
 .character-name.character-5 {
-  background-color: #D50000;
+    background-color: #D50000;
 }
+
 
 /* Inquisitor */
 
 .character-name.character-6 {
-  background-color: #FFA726;
+    background-color: #FFA726;
 }
 
 .icon-action-10,
 .icon-action-11 {
-  color: #E65100 !important;
+    color: #E65100 !important;
 }
+
 
 /* Factions */
 
 .faction-name {
-  line-height: 14px;
+    line-height: 14px;
 }
 
 .faction-name:empty {
-  display: none;
+    display: none;
 }
 
-.faction-name i {
-  font-size: 16px;
-  vertical-align: text-top;
-  color: white;
+.faction-name .iconify {
+    font-size: 16px;
+    vertical-align: text-top;
+    color: white;
 }
 
 .faction-name.faction-1 {
-  background-color: #FF5252;
+    background-color: #FF5252;
 }
 
 .placemat.faction-1 {
-  background-color: rgba(255, 138, 128, 0.5);
+    background-color: rgba(255, 138, 128, 0.5);
 }
 
 .faction-name.faction-2 {
-  background-color: #448AFF;
+    background-color: #448AFF;
 }
 
 .placemat.faction-2 {
-  background-color: rgba(130, 177, 255, 0.5);
+    background-color: rgba(130, 177, 255, 0.5);
 }
 
 .playerhead>.faction-name {
-  float: left;
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  text-align: center;
-  text-shadow: none;
-  margin: 0 5px 0 0;
-  padding: 0;
-  transition: background 2s ease;
+    float: left;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    text-shadow: none;
+    margin: 0 5px 0 0;
+    padding: 0;
+    transition: background 2s ease;
 }
 
-.playerhead>.faction-name i {
-  font-size: 18px;
+.playerhead>.faction-name .iconify {
+    font-size: 18px;
+    padding-top: 1px;
+    padding-left: 1px;
 }
+
 
 /* Action buttons (during turn) */
 
 #game_wrap {
-  font-family: Alegreya;
-  font-weight: 500;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  align-items: center;
+    font-family: Alegreya;
+    font-weight: 500;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
 }
 
 #myactions {
-  display: flex;
-  flex: 0 1 auto;
-  flex-wrap: wrap;
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
 }
 
 .actionrowhead {
-  flex: 1 0 100%;
-  font-size: 15px;
-  text-align: center;
-  line-height: 24px;
-  font-weight: 800;
-  text-transform: uppercase;
+    flex: 1 0 100%;
+    font-size: 15px;
+    text-align: center;
+    line-height: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .action {
-  flex: 1 0 215px;
-  margin: 0 0 5px 5px;
-  background: rgba(255, 255, 255, 0.33);
-  padding: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 100%;
-  box-sizing: border-box;
-  position: relative;
-  transition: background 250ms ease;
-  display: flex;
-  align-items: center;
+    flex: 1 0 215px;
+    margin: 0 0 5px 5px;
+    background: rgba(255, 255, 255, 0.33);
+    padding: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 100%;
+    box-sizing: border-box;
+    position: relative;
+    transition: background 250ms ease;
+    display: flex;
+    align-items: center;
 }
 
-.action i {
-  flex: 0 0 auto;
-  opacity: .66;
-  font-size: 34px;
-  line-height: 100%;
-  color: #333;
-  padding-right: 6px;
-  transition: opacity 250ms ease;
+.action .iconify {
+    flex: 0 0 auto;
+    opacity: .66;
+    font-size: 34px;
+    line-height: 100%;
+    color: #333;
+    padding-right: 6px;
+    transition: opacity 250ms ease;
 }
 
 .action:hover {
-  background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.5);
 }
 
-.action:hover i {
-  opacity: 1;
+.action:hover .iconify {
+    opacity: 1;
 }
 
 .action .actionhead {
-  font-size: 17px;
-  line-height: 24px;
-  font-weight: 800;
-  font-variant: small-caps;
+    font-size: 17px;
+    line-height: 24px;
+    font-weight: 800;
+    font-variant: small-caps;
 }
 
 .action .actionwho {
-  display: block;
-  font-size: 13px;
-  line-height: 100%;
-  font-style: italic;
-  font-weight: normal;
-  font-variant: none;
+    display: block;
+    font-size: 13px;
+    line-height: 100%;
+    font-style: italic;
+    font-weight: normal;
+    font-variant: none;
 }
 
 .action .actiondesc {
-  flex: 1 1 auto;
+    flex: 1 1 auto;
 }
 
 .action .character-name {
-  font-size: 12px;
+    font-size: 12px;
 }
 
 #circle {
-  position: relative;
-  height: 460px;
-  width: 460px;
-  background: rgba(255, 255, 255, 0.33);
-  border-radius: 50%;
-  margin: 110px;
-  flex: 0 0 auto;
+    position: relative;
+    height: 460px;
+    width: 460px;
+    background: rgba(255, 255, 255, 0.33);
+    border-radius: 50%;
+    margin: 110px;
+    flex: 0 0 auto;
 }
 
 #circle.circle-3 {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
 
 #circle.circle-5 {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
 
 .oncircle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 196px;
-  height: 196px;
-  margin: -98px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 174px;
+    height: 174px;
+    margin: -87px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #almshouse,
 #deck {
-  font-size: 14px;
-  text-align: center;
-  cursor: pointer;
-  text-shadow: 0 0 3px white;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    text-shadow: 0 0 3px white;
 }
 
 #almshouse {
-  width: 150px;
-  height: 20px;
-  margin: -10px -75px;
-  transform: translate(0, -100px);
+    width: 150px;
+    height: 20px;
+    margin: -10px -75px;
+    transform: translate(0, -100px);
 }
 
 #deck {
-  width: 90px;
-  height: 150px;
-  margin: -75px -50px;
-  flex-wrap: wrap;
+    width: 90px;
+    height: 150px;
+    margin: -75px -50px;
+    flex-wrap: wrap;
 }
 
 .oncircle.player-0 {
-  transform: translate(0, -230px);
-  z-index: 1;
+    transform: translate(0, -230px);
+    z-index: 1;
 }
 
 .circle-6 .oncircle.player-1 {
-  /* transform: rotate(-30deg) translate(230px) rotate(30deg); */
-  transform: translate(199px, -115px);
-  align-items: flex-end;
-  z-index: 2;
+    /* transform: rotate(-30deg) translate(230px) rotate(30deg); */
+    transform: translate(199px, -115px);
+    align-items: flex-end;
+    z-index: 2;
 }
 
 .circle-6 .oncircle.player-2,
 .circle-3 .oncircle.player-1 {
-  /* transform: rotate(30deg) translate(230px) rotate(-30deg); */
-  transform: translate(199px, 115px);
-  align-items: flex-start;
-  z-index: 2;
+    /* transform: rotate(30deg) translate(230px) rotate(-30deg); */
+    transform: translate(199px, 115px);
+    align-items: flex-start;
+    z-index: 2;
 }
 
 .circle-6 .oncircle.player-3 {
-  transform: translate(0, 230px);
-  z-index: 3;
+    transform: translate(0, 230px);
+    z-index: 3;
 }
 
 .circle-6 .oncircle.player-4,
 .circle-3 .oncircle.player-2 {
-  /* transform: rotate(150deg) translate(230px) rotate(-150deg); */
-  transform: translate(-199px, 115px);
-  align-items: flex-start;
-  z-index: 2;
+    /* transform: rotate(150deg) translate(230px) rotate(-150deg); */
+    transform: translate(-199px, 115px);
+    align-items: flex-start;
+    z-index: 2;
 }
 
 .circle-6 .oncircle.player-5 {
-  /* transform: rotate(210deg) translate(230px) rotate(-210deg); */
-  transform: translate(-199px, -115px);
-  align-items: flex-end;
-  z-index: 2;
+    /* transform: rotate(210deg) translate(230px) rotate(-210deg); */
+    transform: translate(-199px, -115px);
+    align-items: flex-end;
+    z-index: 2;
 }
 
 .circle-5 .oncircle.player-1 {
-  /* transform: rotate(-18deg) translate(230px) rotate(18deg); */
-  transform: translate(219px, -71px);
-  align-items: flex-end;
+    /* transform: rotate(-18deg) translate(230px) rotate(18deg); */
+    transform: translate(219px, -71px);
+    align-items: flex-end;
 }
 
 .circle-5 .oncircle.player-2 {
-  /* transform: rotate(54deg) translate(230px) rotate(-54deg); */
-  transform: translate(135px, 186px);
+    /* transform: rotate(54deg) translate(230px) rotate(-54deg); */
+    transform: translate(135px, 186px);
 }
 
 .circle-5 .oncircle.player-3 {
-  /* transform: rotate(126deg) translate(230px) rotate(-126deg); */
-  transform: translate(-135px, 186px);
+    /* transform: rotate(126deg) translate(230px) rotate(-126deg); */
+    transform: translate(-135px, 186px);
 }
 
 .circle-5 .oncircle.player-4 {
-  /* transform: rotate(198deg) translate(230px) rotate(-198deg); */
-  transform: translate(-219px, -71px);
-  align-items: flex-end;
+    /* transform: rotate(198deg) translate(230px) rotate(-198deg); */
+    transform: translate(-219px, -71px);
+    align-items: flex-end;
 }
 
+.circle-8 .oncircle.player-1 {
+    /* transform: rotate(-45deg) translate(230px) rotate(45deg); */
+    transform: translate(163px, -163px);
+}
+
+.circle-8 .oncircle.player-2,
 .circle-4 .oncircle.player-1 {
-  transform: translate(230px, 0);
+    transform: translate(230px, 0);
 }
 
+.circle-8 .oncircle.player-3 {
+    /* transform: rotate(45deg) translate(230px) rotate(-45deg); */
+    transform: translate(163px, 163px);
+}
+
+.circle-8 .oncircle.player-4,
 .circle-4 .oncircle.player-2,
 .circle-2 .oncircle.player-1 {
-  transform: translate(0, 230px);
+    transform: translate(0, 230px);
 }
 
+.circle-8 .oncircle.player-5 {
+    transform: translate(-163px, 163px);
+}
+
+.circle-8 .oncircle.player-6,
 .circle-4 .oncircle.player-3 {
-  transform: translate(-230px, 0);
+    transform: translate(-230px, 0);
+}
+
+.circle-8 .oncircle.player-7 {
+    transform: translate(-163px, -163px);
+}
+
+.circle-7 .oncircle.player-1 {
+    /* transform: rotate(-38deg) translate(230px) rotate(38deg); */
+    transform: translate(181px, -142px);
+}
+
+.circle-7 .oncircle.player-2 {
+    /* transform: rotate(8deg) translate(230px) rotate(-8deg); */
+    transform: translate(228px, 32px);
+}
+
+.circle-7 .oncircle.player-3 {
+    /* transform: rotate(65deg) translate(230px) rotate(-65deg); */
+    transform: translate(97px, 208px);
+}
+
+.circle-7 .oncircle.player-4 {
+    transform: translate(-97px, 208px);
+}
+
+.circle-7 .oncircle.player-5 {
+    transform: translate(-228px, 32px);
+}
+
+.circle-7 .oncircle.player-6 {
+    transform: translate(-181px, -142px);
 }
 
 .placemat {
-  box-sizing: border-box;
-  padding: 5px 0 2px 5px;
-  border: 2px dashed transparent;
-  border-radius: 5px;
-  transition: border 250ms ease, background 2s ease;
-  cursor: pointer;
+    box-sizing: border-box;
+    padding: 5px 0 2px 5px;
+    border: 2px dashed transparent;
+    border-radius: 5px;
+    transition: border 250ms ease, background 2s ease;
+    cursor: pointer;
 }
 
 .placemat .stockitem_unselectable {
-  cursor: pointer !important;
+    cursor: pointer !important;
 }
 
 .placemat.eliminated .stockitem_unselectable {
-  cursor: default !important;
+    cursor: default !important;
 }
 
 .placemat.selected {
-  border-color: white;
+    border-color: white;
 }
 
 .placemat.eliminated {
-  border-color: rgba(0, 0, 0, 0.33);
-  cursor: default;
-  background: transparent;
+    border-color: rgba(0, 0, 0, 0.33);
+    cursor: default;
+    background: transparent;
 }
 
 .playerhead {
-  position: relative;
-  margin: 0 5px 10px 0;
-  font-size: 18px;
-  line-height: 20px;
-  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.33);
+    position: relative;
+    margin: 0 5px 5px 0;
+    font-size: 18px;
+    line-height: 20px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
 }
 
 .playerhead .wealth {
-  float: right;
+    float: right;
 }
 
 .playerhead .player-name {
-  color: inherit;
+    color: inherit;
 }
 
 .eliminated .player-name {
-  text-decoration: line-through;
+    text-decoration: line-through;
 }
 
 .player-board {
-  transition: background-color 1s ease;
+    transition: background-color 1s ease;
 }
 
 .player-board.eliminated {
-  background-color: transparent;
-  border: 2px dashed rgba(0, 0, 0, 0.33) !important;
-  padding: 3px 1px;
+    background-color: transparent;
+    border: 2px dashed rgba(0, 0, 0, 0.33) !important;
+    padding: 3px 1px;
 }
 
 .cards {
-  width: 184px;
-  padding-right: 3px;
-  perspective: 800px;
+    width: 160px;
+    padding-right: 3px;
+    perspective: 800px;
 }
 
 .card {
-  border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  transform-style: preserve-3d;
-  transform-origin: left center;
-  width: 90px;
-  height: 128px;
-  background: url(img/cards.jpg);
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    width: 90px;
+    height: 128px;
+    background: url(img/cards.jpg);
 }
 
 .card.secret {
-  border-width: 2px;
+    border-width: 2px;
 }
 
 .card.reveal {
-  animation: 2s ease-out reveal-flip;
+    animation: 2s ease-out reveal-flip;
 }
 
 .card.dead {
-  filter: grayscale(75%);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 65px rgba(0, 0, 0, 0.33), inset 0 0 0 5px rgba(0, 0, 0, 0.33);
-  animation: 1s ease-out dead;
+    filter: grayscale(75%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 65px rgba(0, 0, 0, 0.33), inset 0 0 0 5px rgba(0, 0, 0, 0.33);
+    animation: 1s ease-out dead;
 }
 
 .card.dead.reveal {
-  animation: 2s ease-out reveal-flip, 1s ease-out 1s backwards dead;
+    animation: 2s ease-out reveal-flip, 1s ease-out 1s backwards dead;
 }
 
 .card.dead::after {
-  content: "";
-  display: block;
-  position: absolute;
-  top: -7px;
-  left: 42px;
-  width: 5px;
-  height: 142px;
-  border-radius: 2px;
-  transform: rotate(-33deg);
-  background: rgba(0, 0, 0, 0.5);
-  animation: dead-after 1s ease-out;
+    content: "";
+    display: block;
+    position: absolute;
+    top: -7px;
+    left: 42px;
+    width: 5px;
+    height: 142px;
+    border-radius: 2px;
+    transform: rotate(-33deg);
+    background: rgba(0, 0, 0, 0.5);
+    animation: dead-after 1s ease-out;
 }
 
 .card.dead.reveal::after {
-  animation-delay: 1s;
-  animation-fill-mode: backwards;
+    animation-delay: 1s;
+    animation-fill-mode: backwards;
 }
 
 @keyframes reveal-flip {
-  0% {
-    transform: translateX(100%) rotateY(-180deg);
-  }
-  50% {
-    transform: translateX(0) rotateY(0);
-  }
+    0% {
+        transform: translateX(100%) rotateY(-180deg);
+    }
+    50% {
+        transform: translateX(0) rotateY(0);
+    }
 }
 
 @keyframes dead {
-  0% {
-    filter: grayscale(0%);
-    box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5);
-  }
+    0% {
+        filter: grayscale(0%);
+        box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
 }
 
 @keyframes dead-after {
-  0% {
-    background: transparent;
-  }
+    0% {
+        background: transparent;
+    }
 }
 
 .card .card-name {
-  position: absolute;
-  bottom: 6px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  color: white;
-  font-size: 16px;
-  font-style: italic;
-  line-height: 100%;
+    position: absolute;
+    bottom: 6px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: white;
+    font-size: 16px;
+    font-style: italic;
+    line-height: 100%;
 }
 
 .card.dead .card-name {
-  opacity: 0.33;
-  transition: opacity 1s;
+    opacity: 0.33;
+    transition: opacity 1s;
 }
 
 .balloon {
-  position: absolute;
-  bottom: 25px;
-  left: 0;
-  z-index: 1;
-  background: white;
-  color: black;
-  padding: 5px 10px;
-  border-radius: 10px;
-  text-shadow: none;
-  cursor: default;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 100%;
-  min-width: 20px;
-  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    bottom: 25px;
+    left: 0;
+    z-index: 1;
+    background: white;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 10px;
+    text-shadow: none;
+    cursor: default;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 115%;
+    min-width: 20px;
+    box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.5);
 }
 
 .balloon:empty {
-  display: none;
+    display: none;
 }
 
 .balloon::before {
-  bottom: -19px;
-  left: 15px;
-  border: 10px solid transparent;
-  border-top-color: white;
-  content: " ";
-  height: 0;
-  width: 0;
-  position: absolute;
-  pointer-events: none;
+    bottom: -19px;
+    left: 15px;
+    border: 10px solid transparent;
+    border-top-color: white;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
 }
 
-.balloon>i {
-  font-size: 20px;
-  line-height: 100%;
-  vertical-align: text-top;
-  color: #333;
+.balloon>.iconify {
+    font-size: 18px;
+    line-height: 100%;
+    vertical-align: text-top;
+    color: #333;
 }
+
 
 /* Utility */
 
 .hide {
-  display: none;
+    display: none;
 }
 
 @media (min-width: 1180px) {
-  body:not(.logs_on_additional_column) #game_wrap {
-    flex-wrap: nowrap;
-  }
-  body:not(.logs_on_additional_column) #myactions {
-    display: block;
-  }
-  body:not(.logs_on_additional_column) .action .actionwho {
-    display: inline-block;
-  }
+    body:not(.logs_on_additional_column) #game_wrap {
+        flex-wrap: nowrap;
+    }
+    body:not(.logs_on_additional_column) #myactions {
+        display: block;
+    }
+    body:not(.logs_on_additional_column) .action .actionwho {
+        display: inline-block;
+    }
 }
 
 @media (min-width: 1430px) {
-  #game_wrap {
-    flex-wrap: nowrap;
-  }
-  #myactions {
-    display: block;
-  }
-  .action .actionwho {
-    display: inline-block;
-  }
+    #game_wrap {
+        flex-wrap: nowrap;
+    }
+    #myactions {
+        display: block;
+    }
+    .action .actionwho {
+        display: inline-block;
+    }
 }

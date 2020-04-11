@@ -1,10 +1,12 @@
 {OVERALL_GAME_HEADER}
+<script src="https://code.iconify.design/1/1.0.5/iconify.min.js"></script>
+
 <div id="game_wrap">
   <div id="myactions">
     <div class="actionrowhead">{I18N_Actions}:</div>
     <!-- BEGIN action -->
     <div class="action action-{action_id}" data-action="{action_id}">
-      <i class="icon-action-{action_id} mdi {icon}"></i>
+      <i class="iconify icon-action-{action_id}" data-icon="{icon}"></i>
       <div class="actiondesc">
         <div class="actionhead">
           {name}

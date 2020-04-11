@@ -37,15 +37,13 @@ $gameinfos = array(
 
 
 // Players configuration that can be played (ex: 2 to 4 players)
-'players' => array( 2, 3, 4, 5, 6 ),
+'players' => array( 2, 3, 4, 5, 6, 7, 8 ),
 
 // Suggest players to play with this number of players. Must be null if there is no such advice, or if there is only one possible player configuration.
 'suggest_player_number' => 5,
 
 // Discourage players to play with these numbers of players. Must be null if there is no such advice.
-'not_recommend_player_number' => array( 2 ),
-// 'not_recommend_player_number' => array( 2, 3 ),      // <= example: this is not recommended to play this game with 2 or 3 players
-
+'not_recommend_player_number' => array( 2, 7, 8 ),
 
 // Estimated game duration, in minutes (used only for the launch, afterward the real duration is computed)
 'estimated_duration' => 10,
@@ -91,7 +89,7 @@ $gameinfos = array(
 'diplomacy' => 5,
 
 // Colors attributed to players
-'player_colors' => array( "ff0000", "008000", "0000ff", "ffa500", "000000", "ffffff" ),
+'player_colors' => array( "ff0000", "008000", "0000ff", "ffa500", "000000", "ffffff", "982fff", "72c3b1" ),
 
 // Favorite colors support : if set to "true", support attribution of favorite colors based on player's preferences (see reattributeColorsBasedOnPreferences PHP method)
 'favorite_colors_support' => true,
