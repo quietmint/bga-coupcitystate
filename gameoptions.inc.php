@@ -58,8 +58,22 @@ $game_options = array(
             1 => array(
                 'name' => totranslate('Yes'),
                 'tmdisplay' => totranslate('Inquisitor'),
-                'description' => totranslate("Inquisitor replaces Ambassador"),
+                'description' => totranslate('Inquisitor replaces Ambassador'),
                 'nobeginner' => true
+            ),
+        ),
+    ),
+
+    103 => array(
+        'name' => totranslate('Diplomat'),
+        'values' => array(
+            0 => array(
+                'name' => totranslate('No')
+            ),
+            1 => array(
+                'name' => totranslate('Yes'),
+                'tmdisplay' => totranslate('Diplomat'),
+                'description' => totranslate('Diplomat replaces Duke')
             ),
         ),
     ),

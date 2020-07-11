@@ -26,6 +26,7 @@ define('AMBASSADOR', 3);
 define('CAPTAIN', 4);
 define('CONTESSA', 5);
 define('INQUISITOR', 6);
+define('DIPLOMAT', 7);
 
 // Action constants
 define('INCOME', 1);
@@ -39,6 +40,7 @@ define('CONVERT', 8);
 define('EMBEZZLE', 9);
 define('EXCHANGE1', 10);
 define('EXAMINE', 11);
+define('COOPERATION', 12);
 
 // Reason constants
 define('REASON_CHALLENGE', 1);
@@ -95,6 +97,7 @@ class coupcitystate extends Table {
             'typeBlock' => 40,
             'variantFactions' => 101,
             'variantInquisitor' => 102,
+            'variantDiplomat' => 103,
         ));
 
         $this->cards = self::getNew('module.common.deck');
@@ -156,6 +159,7 @@ class coupcitystate extends Table {
         self::initStat('player', 'action8', 0);
         self::initStat('player', 'action9', 0);
         self::initStat('player', 'action11', 0);
+        self::initStat('player', 'action12', 0);
         self::initStat('player', 'blockIssued', 0);
         self::initStat('player', 'blockReceived', 0);
         self::initStat('player', 'challengeIssued', 0);
@@ -291,6 +295,14 @@ class coupcitystate extends Table {
         return true;
     }
 
+    public function getForbid($action_ref) {
+        $forbid = array_filter($action_ref['forbid'], function ($character) {
+            $character_ref = $this->characters[$character];
+            return $this->meetsVariant($character_ref['variant']);
+        });
+        return empty($forbid) ? null : array_shift($forbid);
+    }
+
     public function getName($player_id) {
         return self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$player_id");
     }
@@ -357,7 +369,7 @@ class coupcitystate extends Table {
 
     public function doBalloon($action, $msg, $args) {
         $args_str = self::escapeStringForDB(serialize($args));
-        if ($args['balloon'] != 'no') {
+        if (!array_key_exists('balloonKeep', $args)) {
             self::DbQuery("UPDATE player SET balloon=NULL");
         }
         if ($args['balloon']) {
@@ -580,7 +592,8 @@ class coupcitystate extends Table {
         $player_id = self::getCurrentPlayerId();
         $this->doBalloon('balloonInstant', '', array(
             'player_id' => $player_id,
-            'balloon' => 'no'
+            'balloon' => 'no',
+            'balloonKeep' => true,
         ));
         $this->gamestate->setPlayerNonMultiactive($player_id, 'execute');
     }
@@ -604,7 +617,7 @@ class coupcitystate extends Table {
         self::incStat(1, 'challengeIssued', $player_id);
         self::incStat(1, 'challengeReceived', $player);
 
-        if ($action_ref['forbid'] > 0) {
+        if (count($action_ref['forbid']) > 0) {
             $this->doBalloon('balloonPause', clienttranslate('${player_name} challenges ${player_name2} to reveal all cards!'), array(
                 'player_id' => $player_id,
                 'player_name' => $this->getName($player_id),
@@ -812,7 +825,13 @@ class coupcitystate extends Table {
             if (count($action_ref['blockers']) > 0) {
                 if ($action == FOREIGN_AID) {
                     // Anyone can block Foreign Aid
-                    $output['blockers'] = $action_ref['blockers'];
+                    $output['blockers'] = array();
+                    foreach ($action_ref['blockers'] as $character) {
+                        $character_ref = $this->characters[$character];
+                        if ($this->meetsVariant($character_ref['variant'])) {
+                            $output['blockers'][] = $character;
+                        }
+                    }
                 } else {
                     // Only target can block others
                     $target = self::getGameStateValue('playerTarget');
@@ -830,9 +849,7 @@ class coupcitystate extends Table {
                     );
                 }
             }
-            if ($action_ref['forbid']) {
-                $output['forbid'] = $action_ref['forbid'];
-            }
+            $output['forbid'] = $this->getForbid($action_ref);
             $output['i18n'][] = 'action_name';
             $output['action_name'] = $action_ref['name'];
         }
@@ -1032,7 +1049,8 @@ class coupcitystate extends Table {
                         if ($player_id != $skipPlayerId && $factions[$player_id] == $skipFaction) {
                             $this->doBalloon('balloonInstant', '', array(
                                 'player_id' => $player_id,
-                                'balloon' => 'no'
+                                'balloon' => 'no',
+                                'balloonKeep' => true,
                             ));
                         }
                     }
@@ -1117,8 +1135,9 @@ class coupcitystate extends Table {
 
         $hand = array_values($this->cards->getCardsInLocation('hand', $playerTurn));
         $card_ids = array_column($hand, 'id');
-        $card_name = $this->characters[$action_ref['forbid']]['name'];
-        $index = array_search($action_ref['forbid'], array_column($hand, 'type'));
+        $forbid = $this->getForbid($action_ref);
+        $card_name = $this->characters[$forbid]['name'];
+        $index = array_search($forbid, array_column($hand, 'type'));
         $args = array(
             'i18n' => array('card_name'),
             'player_id' => $playerTurn,
@@ -1298,6 +1317,23 @@ class coupcitystate extends Table {
                     $args['amount'] = $action_ref['amount'];
                     $args['wealth'] = $this->addWealth($playerTurn, $args['amount']);
                     self::incStat($args['amount'], 'wealthIn', $playerTurn);
+                    break;
+
+                case COOPERATION:
+                    // Give 2 coins to the current player
+                    $args['balloon'] = $this->balloons['wealth'];
+                    $args['amount'] = 2;
+                    $args['wealth'] = $this->addWealth($args['player_id'], $args['amount']);
+                    self::incStat($args['amount'], 'wealthIn', $args['player_id']);
+                    $this->doBalloon($logAs, $action_ref['logExecute'], $args);
+
+                    // Give 1 coin to the target 
+                    $args['balloonKeep'] = true;
+                    $args['player_id'] = $target;
+                    $args['player_name'] = $this->getName($target);
+                    $args['amount'] = 1;
+                    $args['wealth'] = $this->addWealth($args['player_id'], $args['amount']);
+                    self::incStat($args['amount'], 'wealthIn', $args['player_id']);
                     break;
 
                 case COUP:

@@ -134,6 +134,11 @@ $stats_type = array(
             'type' => 'int',
             'name' => totranslate('Examine')
         ),
+        'action12' => array(
+            'id' => 41,
+            'type' => 'int',
+            'name' => totranslate('Cooperation')
+        ),
         'blockIssued' => array(
             'id' => 50,
             'type' => 'int',

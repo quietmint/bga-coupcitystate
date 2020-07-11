@@ -83,12 +83,13 @@ class view_coupcitystate_coupcitystate extends game_view {
                 $args['blockHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('${card_name} can block.')));
             }
 
-            if ($action_ref['character'] > 0) {
+            $forbid = $this->game->getForbid($action_ref);
+            if ($forbid != null) {
+                $card_name = $this->getCharacterName($forbid);
+                $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('not as ${card_name}')));
+            } else if ($action_ref['character'] > 0) {
                 $card_name = $this->getCharacterName($action_ref['character']);
                 $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('as ${card_name}')));
-            } elseif ($action_ref['forbid'] > 0) {
-                $card_name = $this->getCharacterName($action_ref['forbid']);
-                $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('not as ${card_name}')));
             }
 
             $this->page->insert_block('action', $args);

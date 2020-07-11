@@ -144,7 +144,8 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
                 myCards.setSelectionMode(0);
                 myCards.onItemCreate = dojo.hitch(this, 'setupCard');
                 for (var i in gamedatas.characters) {
-                    myCards.addItemType(i, i, g_gamethemeurl + 'img/cards.jpg', i);
+                    var pos = i == 7 ? 1 : i
+                    myCards.addItemType(i, i, g_gamethemeurl + 'img/cards.jpg', pos);
                 }
                 if (player_id == this.player_id) {
                     dojo.connect(myCards, 'onChangeSelection', this, 'onSelectCard');
@@ -724,16 +725,14 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
         notif_balloon: function (n, fromInit) {
             var player_id = n.args.player_id;
             if (player_id) {
-                var isNo = n.args.balloon == 'no';
-
                 // Clear all balloons
-                if (!fromInit && !isNo) {
+                if (!fromInit && !n.args.balloonKeep) {
                     dojo.query('.balloon').forEach(dojo.empty);
                 }
 
                 // New balloon
                 var html = '';
-                if (isNo) {
+                if (n.args.balloon == 'no') {
                     html = '<i class="icon-action-no iconify" data-icon="mdi-thumb-up-outline"></i>';
                 } else if (n.args.balloon != null) {
                     if (n.args.action) {

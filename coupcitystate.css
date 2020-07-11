@@ -39,13 +39,13 @@
 }
 
 
-/* Duke */
+/* Duke/Diplomat */
 
-.character-name.character-1 {
+.character-name.character-1, .character-name.character-7 {
     background-color: #9C27B0;
 }
 
-.icon-action-4 {
+.icon-action-4, .icon-action-12 {
     color: #6A1B9A !important;
 }
 
