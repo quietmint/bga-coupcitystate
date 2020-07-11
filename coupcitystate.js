@@ -530,6 +530,7 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
 
         onAct: function (evt) {
             delete this.pendingAction;
+            dojo.query('#myactions .action.pending').removeClass('pending');
             if (typeof evt == 'number') {
                 // Happens when clicking your own card
                 var action = evt;
@@ -569,6 +570,7 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
                     }
                     if (target == null) {
                         this.pendingAction = action;
+                        dojo.query('#myactions .action.action-' + action).addClass('pending');
                         var msg = _('Choose a target player for this action.');
                         this.showMessage(msg, 'info');
                         return;

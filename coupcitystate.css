@@ -203,11 +203,11 @@
     transition: opacity 250ms ease;
 }
 
-.action:hover {
-    background: rgba(255, 255, 255, 0.5);
+.action:hover, .action.pending {
+    background: rgba(255, 255, 255, 0.66);
 }
 
-.action:hover .iconify {
+.action:hover .iconify, .action.pending .iconify {
     opacity: 1;
 }
 
