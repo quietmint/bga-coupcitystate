@@ -1,4 +1,5 @@
 <?php
+
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -78,7 +79,7 @@ $machinestates = array(
         'descriptionmyturn' => clienttranslate('${you} must take an action.'),
         'type' => 'activeplayer',
         'action' => 'stPlayerBegin',
-        'possibleactions' => array( 'act' ),
+        'possibleactions' => array('act'),
         'transitions' => array(
             'ask' => ST_ACT,
             'execute' => ST_EXECUTE,
@@ -90,15 +91,28 @@ $machinestates = array(
         'name' => 'ask',
         'description' => clienttranslate('Wait until all players have responded.'),
         'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s ${action_name}?'),
-        'i18n' => array('action'),
         'type' => 'multipleactiveplayer',
         'args' => 'argAsk',
         'action' => 'stAsk',
-        'possibleactions' => array( 'actionBlock', 'actionNo', 'actionYes' ),
+        'possibleactions' => array('actionBlock', 'actionNo', 'actionYes'),
         'transitions' => array(
             'askBlock' => ST_ASK_BLOCK,
             'yes' => ST_CHALLENGE,
             'yesAll' => ST_CHALLENGE_ALL,
+            'execute' => ST_EXECUTE,
+            'zombiePass' => ST_EXECUTE,
+        )
+    ),
+
+    ST_SECOND_CHANCE => array(
+        'name' => 'secondChance',
+        'description' => clienttranslate('Wait until all players have responded.'),
+        'descriptionmyturn' => clienttranslate('Stop ${player_name2}\'s ${action_name}?'),
+        'type' => 'multipleactiveplayer',
+        'args' => 'argAsk',
+        'possibleactions' => array('actionBlock', 'actionNo'),
+        'transitions' => array(
+            'askBlock' => ST_ASK_BLOCK,
             'execute' => ST_EXECUTE,
             'zombiePass' => ST_EXECUTE,
         )
@@ -111,7 +125,7 @@ $machinestates = array(
         'type' => 'multipleactiveplayer',
         'args' => 'argAsk',
         'action' => 'stAsk',
-        'possibleactions' => array( 'actionNo', 'actionYes' ),
+        'possibleactions' => array('actionNo', 'actionYes'),
         'transitions' => array(
             'yes' => ST_CHALLENGE_BLOCK,
             'execute' => ST_EXECUTE,
@@ -123,10 +137,9 @@ $machinestates = array(
         'name' => 'askChooseCard',
         'description' => clienttranslate('${actplayer} must choose a card: ${reason} (${detail}).'),
         'descriptionmyturn' => clienttranslate('${you} must choose a card: ${reason} (${detail}).'),
-        'i18n' => array('reason', 'detail'),
         'type' => 'activeplayer',
         'args' => 'argChooseCard',
-        'possibleactions' => array( 'actionChooseCard' ),
+        'possibleactions' => array('actionChooseCard'),
         'transitions' => array(
             'challenge' => ST_CHALLENGE,
             'challengeBlock' => ST_CHALLENGE_BLOCK,
@@ -142,7 +155,7 @@ $machinestates = array(
         'descriptionmyturn' => clienttranslate('${you} must discard ${count} cards.'),
         'type' => 'activeplayer',
         'args' => 'argDiscard',
-        'possibleactions' => array( 'actionDiscard' ),
+        'possibleactions' => array('actionDiscard'),
         'transitions' => array(
             '' => ST_PLAYER_END,
         )
@@ -155,7 +168,7 @@ $machinestates = array(
         'type' => 'activeplayer',
         'args' => 'argExamine',
         'action' => 'stExamine',
-        'possibleactions' => array( 'actionExamineKeep', 'actionExamineExchange' ),
+        'possibleactions' => array('actionExamineKeep', 'actionExamineExchange'),
         'transitions' => array(
             '' => ST_PLAYER_END,
         )
@@ -200,6 +213,7 @@ $machinestates = array(
         'action' => 'stKillLoss',
         'transitions' => array(
             'askChooseCard' => ST_ASK_CHOOSE_CARD,
+            'secondChance' => ST_SECOND_CHANCE,
             'execute' => ST_EXECUTE,
             'roundEnd' => ST_ROUND_END,
         )

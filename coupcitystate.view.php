@@ -1,4 +1,5 @@
 <?php
+
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -24,25 +25,21 @@
  *
  */
 
-require_once(APP_BASE_PATH."view/common/game.view.php");
+require_once(APP_BASE_PATH . "view/common/game.view.php");
 
-class view_coupcitystate_coupcitystate extends game_view
-{
-    public function getGameName()
-    {
+class view_coupcitystate_coupcitystate extends game_view {
+    public function getGameName() {
         return 'coupcitystate';
     }
 
-    public function getCharacterName($character_id)
-    {
+    public function getCharacterName($character_id) {
         $character_ref = $this->game->characters[$character_id];
         if ($this->game->meetsVariant($character_ref['variant'])) {
             return '<div class="character-name character-' . $character_id . '">' . self::_($character_ref['name']) . '</div>';
         }
     }
 
-    public function build_page($viewArgs)
-    {
+    public function build_page($viewArgs) {
         global $g_user;
         $current_player_id = $g_user->get_id();
         $template = self::getGameName() . '_' . self::getGameName();

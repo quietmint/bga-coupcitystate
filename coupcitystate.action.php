@@ -1,4 +1,5 @@
 <?php
+
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -22,11 +23,9 @@
  */
 
 
-class action_coupcitystate extends APP_GameAction
-{
+class action_coupcitystate extends APP_GameAction {
     // Constructor: please do not modify
-    public function __default()
-    {
+    public function __default() {
         if (self::isArg('notifwindow')) {
             $this->view = 'common_notifwindow';
             $this->viewArgs['table'] = self::getArg('table', AT_posint, true);
@@ -36,8 +35,7 @@ class action_coupcitystate extends APP_GameAction
         }
     }
 
-    public function act()
-    {
+    public function act() {
         self::setAjaxMode();
         $action = self::getArg('act', AT_posint, true);
         $target = self::getArg('target', AT_posint);
@@ -45,38 +43,33 @@ class action_coupcitystate extends APP_GameAction
         self::ajaxResponse();
     }
 
-    public function actionNo()
-    {
+    public function actionNo() {
         self::setAjaxMode();
         $this->game->actionNo();
         self::ajaxResponse();
     }
 
-    public function actionYes()
-    {
+    public function actionYes() {
         self::setAjaxMode();
         $this->game->actionYes();
         self::ajaxResponse();
     }
 
-    public function actionBlock()
-    {
+    public function actionBlock() {
         self::setAjaxMode();
         $card_type = self::getArg('card_type', AT_posint, true);
         $this->game->actionBlock($card_type);
         self::ajaxResponse();
     }
 
-    public function actionChooseCard()
-    {
+    public function actionChooseCard() {
         self::setAjaxMode();
         $card_id = self::getArg('card_id', AT_posint, true);
         $this->game->actionChooseCard($card_id);
         self::ajaxResponse();
     }
 
-    public function actionDiscard()
-    {
+    public function actionDiscard() {
         self::setAjaxMode();
         $str = self::getArg('card_ids', AT_numberlist, true);
         if ($str == '') {
@@ -88,15 +81,13 @@ class action_coupcitystate extends APP_GameAction
         self::ajaxResponse();
     }
 
-    public function actionExamineKeep()
-    {
+    public function actionExamineKeep() {
         self::setAjaxMode();
         $this->game->actionExamineKeep();
         self::ajaxResponse();
     }
 
-    public function actionExamineExchange()
-    {
+    public function actionExamineExchange() {
         self::setAjaxMode();
         $this->game->actionExamineExchange();
         self::ajaxResponse();

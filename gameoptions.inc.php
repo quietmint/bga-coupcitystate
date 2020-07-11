@@ -1,4 +1,5 @@
 <?php
+
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -33,6 +34,7 @@ $game_options = array(
             1 => array(
                 'name' => totranslate('Yes'),
                 'tmdisplay' => totranslate('Factions'),
+                'description' => totranslate('Cannot attack teammates while 2 teams exist'),
                 'nobeginner' => true
             ),
         ),
@@ -56,6 +58,7 @@ $game_options = array(
             1 => array(
                 'name' => totranslate('Yes'),
                 'tmdisplay' => totranslate('Inquisitor'),
+                'description' => totranslate("Inquisitor replaces Ambassador"),
                 'nobeginner' => true
             ),
         ),

@@ -13,8 +13,7 @@
  *
  */
 
-@import url(../../../css/csslayer.css);
-@import url('https://fonts.googleapis.com/css?family=Alegreya:500,500i,700,800&subset=latin-ext');
+@import url('https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,500;0,800;1,500&display=swap');
 #page-title .action-button.bgabutton {
     min-width: 100px;
 }
@@ -224,7 +223,7 @@
     font-size: 13px;
     line-height: 100%;
     font-style: italic;
-    font-weight: normal;
+    font-weight: 500;
     font-variant: none;
 }
 
