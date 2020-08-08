@@ -191,7 +191,7 @@ $this->actions = array(
       'count' => 1,
       'character' => INQUISITOR,
       'forbid' => array(),
-      'blockers' => array(),
+      'blockers' => array(CONTESSA),
       'variant' => array('variantInquisitor' => 1),
    ),
    ASSASSINATE => array(
