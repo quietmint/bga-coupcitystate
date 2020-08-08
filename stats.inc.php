@@ -137,7 +137,7 @@ $stats_type = array(
         'action12' => array(
             'id' => 41,
             'type' => 'int',
-            'name' => totranslate('Cooperation')
+            'name' => totranslate('Cooperate')
         ),
         'blockIssued' => array(
             'id' => 50,
