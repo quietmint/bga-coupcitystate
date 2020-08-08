@@ -693,7 +693,16 @@ class coupcitystate extends Table {
 
             case REASON_EXAMINE:
                 self::setGameStateValue('cardExamine', $card_id);
+                $player_id = self::getActivePlayerId();
                 $playerTurn = self::getGameStateValue('playerTurn');
+                $card = $this->getCard($card_id, 'hand', $player_id);
+                self::notifyPlayer($player_id, 'message', clienttranslate('${icon} Shhh! You reveal the ${card_name} to ${player_name}.'), array(
+                    'i18n' => array('card_name'),
+                    'player_name' => $this->getName($playerTurn),
+                    'card_name' => $card['name'],
+                    'secret' => true,
+                    'icon' => '<span class="iconify" data-icon="noto:shushing-face" data-inline="false"></span>',
+                ));
                 $this->gamestate->nextState('execute');
                 break;
 
@@ -1476,7 +1485,7 @@ class coupcitystate extends Table {
         $cardExamine = self::getGameStateValue('cardExamine');
         $target = self::getGameStateValue('playerTarget');
         $card = $this->getCard($cardExamine, 'hand', $target);
-        self::notifyPlayer($playerTurn, 'revealInstant', 'Shh! ${player_name}\'s card is the ${card_name}.', array(
+        self::notifyPlayer($playerTurn, 'revealInstant', clienttranslate('${icon} Shhh! ${player_name}\'s card is the ${card_name}.'), array(
             'i18n' => array('card_name'),
             'player_id' => $target,
             'player_name' => $this->getName($target),
@@ -1484,6 +1493,7 @@ class coupcitystate extends Table {
             'card_name' => $card['name'],
             'alive' => true,
             'secret' => true,
+            'icon' => '<span class="iconify" data-icon="noto:shushing-face" data-inline="false"></span>',
         ));
     }
 

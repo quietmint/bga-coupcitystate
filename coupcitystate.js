@@ -17,6 +17,31 @@
 var isDebug = window.location.host == 'studio.boardgamearena.com' || window.location.hash.indexOf('debug') > -1;
 
 define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/counter", "ebg/stock"], function (dojo, declare, domAttr) {
+    function override_format_string_recursive(str, args) {
+        if (str && args && !args.formatted) {
+            args.formatted = true;
+            if (args.player_name && !args.player_name.startsWith('<')) {
+                args.player_name = this.format_player_name(args.player_name);
+            }
+            if (args.player_name2 && !args.player_name2.startsWith('<')) {
+                args.player_name2 = this.format_player_name(args.player_name2);
+            }
+            if (args.card_name) {
+                args.card_name = this.format_character_name(args.card_name);
+            }
+            if (args.card_name2) {
+                args.card_name2 = this.format_character_name(args.card_name2);
+            }
+            if (args.detail) {
+                args.detail = this.format_character_name(args.detail);
+            }
+            if (args.faction_name) {
+                args.faction_name = this.format_faction_name(args.faction_name);
+            }
+        }
+        return this.inherited(override_format_string_recursive, arguments);
+    };
+
     return declare("bgagame.coupcitystate", ebg.core.gamegui, {
         constructor: function () { },
 
@@ -31,30 +56,7 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
         },
 
         /* Stylize character and faction names in logs, balloons, buttons, etc. */
-        format_string_recursive: function (str, args) {
-            if (str && args && !args.formatted) {
-                args.formatted = true;
-                if (args.player_name && !args.player_name.startsWith('<')) {
-                    args.player_name = this.format_player_name(args.player_name);
-                }
-                if (args.player_name2 && !args.player_name2.startsWith('<')) {
-                    args.player_name2 = this.format_player_name(args.player_name2);
-                }
-                if (args.card_name) {
-                    args.card_name = this.format_character_name(args.card_name);
-                }
-                if (args.card_name2) {
-                    args.card_name2 = this.format_character_name(args.card_name2);
-                }
-                if (args.detail) {
-                    args.detail = this.format_character_name(args.detail);
-                }
-                if (args.faction_name) {
-                    args.faction_name = this.format_faction_name(args.faction_name);
-                }
-            }
-            return this.inherited(arguments);
-        },
+        format_string_recursive: override_format_string_recursive,
 
         format_player_name: function (player_name) {
             for (var id in this.gamedatas.players) {
