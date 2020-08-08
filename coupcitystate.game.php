@@ -763,7 +763,7 @@ class coupcitystate extends Table {
 
         // Target and turn player see visible discard
         // Others see unknown discard
-        $idsVisible = array($player_id, intval($playerTarget));
+        $idsVisible = array(intval($player_id), intval($playerTarget));
         foreach ($idsVisible as $id) {
             self::notifyPlayer($id, 'discardInstant', '', array(
                 'player_id' => $playerTarget,
