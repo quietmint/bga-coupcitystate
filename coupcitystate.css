@@ -180,7 +180,7 @@
     line-height: 100%;
     box-sizing: border-box;
     position: relative;
-    transition: background 250ms ease;
+    transition: background 500ms ease;
     display: flex;
     align-items: center;
 }
@@ -195,7 +195,7 @@
     transition: opacity 250ms ease;
 }
 
-.action:hover, .action.pending {
+.action:hover, .action.pending, .placemat:hover, .placemat.selected {
     background: rgba(255, 255, 255, 0.66);
 }
 
@@ -414,7 +414,7 @@
     padding: 5px 0 2px 5px;
     border: 2px dashed transparent;
     border-radius: 5px;
-    transition: border 250ms ease, background 2s ease;
+    transition: border 250ms ease, background 1s ease;
     cursor: pointer;
 }
 
@@ -424,10 +424,6 @@
 
 .placemat.eliminated .stockitem_unselectable {
     cursor: default !important;
-}
-
-.placemat.selected {
-    border-color: white;
 }
 
 .placemat.eliminated {
@@ -441,6 +437,11 @@
     margin: 0 5px 5px 0;
     font-size: 18px;
     line-height: 20px;
+    text-shadow: 0px 0px 4px white;
+}
+
+.color-ffffff .playerhead {
+    text-shadow: 0px 0px 2px black;
 }
 
 .playerhead .wealth {

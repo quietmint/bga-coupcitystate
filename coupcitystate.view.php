@@ -32,13 +32,6 @@ class view_coupcitystate_coupcitystate extends game_view {
         return 'coupcitystate';
     }
 
-    public function getCharacterName($character_id) {
-        $character_ref = $this->game->characters[$character_id];
-        if ($this->game->meetsVariant($character_ref['variant'])) {
-            return '<div class="character-name character-' . $character_id . '">' . self::_($character_ref['name']) . '</div>';
-        }
-    }
-
     public function build_page($viewArgs) {
         global $g_user;
         $current_player_id = $g_user->get_id();
@@ -49,10 +42,8 @@ class view_coupcitystate_coupcitystate extends game_view {
         $this->tpl['I18N_Almshouse'] = self::_('Almshouse');
         $this->tpl['I18N_Deck'] = self::_('Deck');
 
-        // Inflate action block
-        $this->page->begin_block($template, 'action');
         foreach ($this->game->actions as $action => $action_ref) {
-            if (!$this->game->meetsVariant($action_ref['variant'])) {
+            if (!$this->game->meetsVariant($action_ref)) {
                 continue;
             }
 
@@ -60,39 +51,6 @@ class view_coupcitystate_coupcitystate extends game_view {
             if ($action == EXCHANGE || $action == EXCHANGE1) {
                 $this->tpl['action_deck'] = $action;
             }
-
-            $args = array(
-                'action_id' => $action,
-                'icon' => $action_ref['icon'],
-                'name' => self::_($action_ref['name']),
-                'text1' => self::_($action_ref['text1']),
-                'text2' => self::_($action_ref['text2']),
-                'blockHtml' => self::_('Cannot block.'),
-                'claimHtml' => '',
-            );
-
-            if (count($action_ref['blockers']) > 0) {
-                $card_name = '';
-                foreach ($action_ref['blockers'] as $blocker) {
-                    $html = $this->getCharacterName($blocker);
-                    if ($html) {
-                        $card_name .=  $html . ' / ';
-                    }
-                }
-                $card_name = substr($card_name, 0, -3);
-                $args['blockHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('${card_name} can block.')));
-            }
-
-            $forbid = $this->game->getForbid($action_ref);
-            if ($forbid != null) {
-                $card_name = $this->getCharacterName($forbid);
-                $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('not as ${card_name}')));
-            } else if ($action_ref['character'] > 0) {
-                $card_name = $this->getCharacterName($action_ref['character']);
-                $args['claimHtml'] = self::raw(str_replace('${card_name}', $card_name, self::_('as ${card_name}')));
-            }
-
-            $this->page->insert_block('action', $args);
         }
 
         // Get players & players number

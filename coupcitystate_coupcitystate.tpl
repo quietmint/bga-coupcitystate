@@ -4,18 +4,6 @@
 <div id="game_wrap">
   <div id="myactions">
     <div class="actionrowhead">{I18N_Actions}:</div>
-    <!-- BEGIN action -->
-    <div class="action action-{action_id}" data-action="{action_id}">
-      <i class="iconify icon-action-{action_id}" data-icon="{icon}"></i>
-      <div class="actiondesc">
-        <div class="actionhead">
-          {name}
-          <div class="actionwho">{claimHtml}</div>
-        </div>
-        {text1} {text2} {blockHtml}
-      </div>
-    </div>
-    <!-- END action -->
   </div>
 
   <div id="circle" class="circle-{player_count}">
@@ -28,7 +16,7 @@
     </div>
     <!-- BEGIN player -->
     <div class="oncircle player-{index}">
-      <div id="placemat_{player_id}" class="placemat player-{index}" style="color: #{player_color}" data-player="{player_id}">
+      <div id="placemat_{player_id}" class="placemat player-{index} color-{player_color}" style="color: #{player_color}" data-player="{player_id}">
         <div class="playerhead">
           <div id="balloon_{player_id}" class="balloon"></div>
           <div id="wealth_{player_id}" class="wealth"></div>
@@ -41,4 +29,20 @@
     <!-- END player -->
   </div>
 </div>
+
+<script type="text/javascript">
+
+var jstpl_action = `<div class="action action-\${id}" data-action="\${id}">
+  <i class="iconify icon-action-\${id}" data-icon="\${icon}"></i>
+  <div class="actiondesc">
+    <div class="actionhead">
+      \${textName}
+      <div class="actionwho">\${textClaim}</div>
+    </div>
+    \${textDesc} \${textBlock}
+  </div>
+</div>`;
+
+</script>
+
 {OVERALL_GAME_FOOTER}

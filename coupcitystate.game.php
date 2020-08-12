@@ -171,7 +171,7 @@ class coupcitystate extends Table {
         $copies = count($players) >= 7 ? 4 : 3;
         $cards = array();
         foreach ($this->characters as $character => $character_ref) {
-            if ($character == 0 || !$this->meetsVariant($character_ref['variant'])) {
+            if ($character == 0 || !$this->meetsVariant($character_ref)) {
                 continue;
             }
             $cards[] = array('type' => "$character", 'type_arg' => 0, 'nbr' => $copies);
@@ -200,9 +200,11 @@ class coupcitystate extends Table {
         $public = $this->getPublicData();
         $private = $this->getPrivateData($player_id);
 
+        $actions = $this->filterMeetsVariant($this->actions);
         return array(
-            'actions' => $this->actions,
-            'characters' => $this->characters,
+            'actions' => $actions,
+            'actionsOrder' => array_keys($actions),
+            'characters' => $this->filterMeetsVariant($this->characters),
             'factions' => $this->factions
         ) + $public + $private;
     }
@@ -284,9 +286,9 @@ class coupcitystate extends Table {
         return $result;
     }
 
-    public function meetsVariant($conditions) {
-        if (is_array($conditions)) {
-            foreach ($conditions as $key => $value) {
+    public function meetsVariant($ref) {
+        if (is_array($ref['variant'])) {
+            foreach ($ref['variant'] as $key => $value) {
                 if (self::getGameStateValue($key) != $value) {
                     return false;
                 }
@@ -295,10 +297,14 @@ class coupcitystate extends Table {
         return true;
     }
 
+    public function filterMeetsVariant($input) {
+        return array_filter($input, [$this, 'meetsVariant']);
+    }
+
     public function getForbid($action_ref) {
         $forbid = array_filter($action_ref['forbid'], function ($character) {
             $character_ref = $this->characters[$character];
-            return $this->meetsVariant($character_ref['variant']);
+            return $this->meetsVariant($character_ref);
         });
         return empty($forbid) ? null : array_shift($forbid);
     }
@@ -516,7 +522,7 @@ class coupcitystate extends Table {
         $action_ref = $this->actions[$action];
 
         // Check variant
-        if (!$this->meetsVariant($action_ref['variant'])) {
+        if (!$this->meetsVariant($action_ref)) {
             throw new BgaVisibleSystemException("Invalid move. Action ($action) not allowed in this game variant.");
         }
 
@@ -837,7 +843,7 @@ class coupcitystate extends Table {
                     $output['blockers'] = array();
                     foreach ($action_ref['blockers'] as $character) {
                         $character_ref = $this->characters[$character];
-                        if ($this->meetsVariant($character_ref['variant'])) {
+                        if ($this->meetsVariant($character_ref)) {
                             $output['blockers'][] = $character;
                         }
                     }
@@ -849,7 +855,7 @@ class coupcitystate extends Table {
                     $blockers = array();
                     foreach ($action_ref['blockers'] as $character) {
                         $character_ref = $this->characters[$character];
-                        if ($this->meetsVariant($character_ref['variant'])) {
+                        if ($this->meetsVariant($character_ref)) {
                             $blockers[] = $character;
                         }
                     }

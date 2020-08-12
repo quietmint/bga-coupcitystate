@@ -106,7 +106,49 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
         */
 
         setup: function (gamedatas) {
+            console.log('Gamedatas:', gamedatas);
+            var _this = this;
+
             // Player actions
+            gamedatas.actionsOrder.forEach(function (action) {
+                var action_ref = gamedatas.actions[action];
+                action_ref.id = action;
+
+                action_ref.textName = _(action_ref.name);
+                action_ref.textDesc = _(action_ref.text1) + ' ' + _(action_ref.text2);
+
+                action_ref.textClaim = '';
+                if (action_ref.forbid && action_ref.forbid.length > 0) {
+                    var card_name = action_ref.forbid.filter(function (id) {
+                        return gamedatas.characters[id] != null;
+                    }).map(function (id) {
+                        return gamedatas.characters[id].name;
+                    });
+                    action_ref.textClaim = _this.format_string_recursive(_('not as ${card_name}'), {
+                        card_name: card_name
+                    });
+                } else if (action_ref.character) {
+                    var card_name = gamedatas.characters[action_ref.character].name;
+                    action_ref.textClaim = _this.format_string_recursive(_('as ${card_name}'), {
+                        card_name: card_name
+                    });
+                }
+
+                action_ref.textBlock = _('Cannot block.');
+                if (action_ref.blockers && action_ref.blockers.length > 0) {
+                    var card_name = action_ref.blockers.filter(function (id) {
+                        return gamedatas.characters[id] != null;
+                    }).map(function (id) {
+                        return _this.format_character_name(gamedatas.characters[id].name);
+                    }).join(' / ');
+                    action_ref.textBlock = _this.format_string_recursive(_('${card_name} can block.'), {
+                        card_name: card_name
+                    });
+                }
+
+                dojo.place(_this.format_block('jstpl_action', action_ref), 'myactions');
+            });
+
             if (!this.isSpectator) {
                 dojo.addClass('placemat_' + this.player_id, 'mine');
                 dojo.query('#myactions .action').connect('onclick', this, 'onAct');
@@ -124,13 +166,6 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
             if (gamedatas.variantFactions) {
                 dojo.removeClass('almshouse', 'hide');
             }
-
-            // Translate "my actions"
-            dojo.query('#myactions .character-name').forEach(function (e) {
-                var character = e.className.match(/character-(\d+)/)[1];
-                var character_ref = gamedatas.characters[character];
-                e.innerHTML = _(character_ref.name);
-            });
 
             this.tableau = {};
             for (var player_id in gamedatas.players) {
@@ -342,7 +377,7 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
                                 var blocker = blockers[i];
                                 var character_ref = this.gamedatas.characters[blocker];
                                 var str = this.format_string_recursive(_('I block with my ${card_name}'), {
-                                    card_name: _(character_ref.name)
+                                    card_name: character_ref.name
                                 });
                                 this.addActionButton('button_block' + blocker, str, 'onBlock');
                             }
