@@ -1,5 +1,4 @@
 {OVERALL_GAME_HEADER}
-<script src="https://code.iconify.design/1/1.0.5/iconify.min.js"></script>
 
 <div id="game_wrap">
   <div id="myactions">
@@ -33,7 +32,7 @@
 <script type="text/javascript">
 
 var jstpl_action = `<div class="action action-\${id}" data-action="\${id}">
-  <i class="iconify icon-action-\${id}" data-icon="\${icon}"></i>
+  <span class="iconify icon-action-\${id}">\${icon}</span>
   <div class="actiondesc">
     <div class="actionhead">
       \${textName}

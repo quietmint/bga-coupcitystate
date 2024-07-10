@@ -23,7 +23,7 @@
 $this->actions = array(
    INCOME => array(
       'name' => clienttranslate('Income'),
-      'icon' => 'mdi-cash',
+      'icon' => '🪙',
       'text1' => clienttranslate('Take ₤1.'),
       'text2' => '',
       'balloonAttempt' => '',
@@ -39,7 +39,7 @@ $this->actions = array(
    ),
    FOREIGN_AID => array(
       'name' => clienttranslate('Foreign Aid'),
-      'icon' => 'mdi-gift',
+      'icon' => '🎁',
       'text1' => clienttranslate('Take ₤2.'),
       'text2' => '',
       'balloonAttempt' => clienttranslate('I will take foreign aid...'),
@@ -55,7 +55,7 @@ $this->actions = array(
    ),
    COUP => array(
       'name' => clienttranslate('Coup'),
-      'icon' => 'mdi-alert-decagram',
+      'icon' => '⚔️',
       'text1' => clienttranslate('Pay ₤7.'),
       'text2' => clienttranslate('Choose player to lose influence.'),
       'balloonAttempt' => '',
@@ -70,7 +70,7 @@ $this->actions = array(
    ),
    CONVERT => array(
       'name' => clienttranslate('Convert'),
-      'icon' => 'mdi-account-switch-outline',
+      'icon' => '🔃',
       'text1' => clienttranslate('Pay almshouse.'),
       'text2' => clienttranslate('Choose player to change faction.'),
       'balloonAttempt' => '',
@@ -85,7 +85,7 @@ $this->actions = array(
    ),
    EMBEZZLE => array(
       'name' => clienttranslate('Embezzle'),
-      'icon' => 'mdi-charity',
+      'icon' => '🥷',
       'text1' => clienttranslate('Steal from almshouse.'),
       'text2' => '',
       'balloonAttempt' => clienttranslate('I will steal from the almshouse...'),
@@ -100,7 +100,7 @@ $this->actions = array(
    ),
    TAX => array(
       'name' => clienttranslate('Tax'),
-      'icon' => 'mdi-sack-percent',
+      'icon' => '💰',
       'text1' => clienttranslate('Take ₤3.'),
       'text2' => '',
       'balloonAttempt' => clienttranslate('I will collect tax...'),
@@ -116,7 +116,7 @@ $this->actions = array(
    ),
    COOPERATION => array(
       'name' => clienttranslate('Cooperate'),
-      'icon' => 'mdi-account-group',
+      'icon' => '🤝',
       'text1' => clienttranslate('Take ₤3.'),
       'text2' => clienttranslate('Give ₤1 to antoher player.'),
       'balloonAttempt' => clienttranslate('I will cooperate with ${player_name2}...'),
@@ -132,7 +132,7 @@ $this->actions = array(
    ),
    STEAL => array(
       'name' => clienttranslate('Steal'),
-      'icon' => 'mdi-anchor',
+      'icon' => '⚓',
       'text1' => clienttranslate('Steal ₤2 from another player.'),
       'text2' => '',
       'balloonAttempt' => clienttranslate('I will steal from ${player_name2}...'),
@@ -147,7 +147,7 @@ $this->actions = array(
    ),
    EXCHANGE => array(
       'name' => clienttranslate('Exchange'),
-      'icon' => 'mdi-swap-horizontal',
+      'icon' => '🎲',
       'text1' => clienttranslate('Exchange 2 cards with the deck.'),
       'text2' => '',
       'balloonAttempt' => clienttranslate('I will exchange cards...'),
@@ -163,7 +163,7 @@ $this->actions = array(
    ),
    EXCHANGE1 => array(
       'name' => clienttranslate('Exchange'),
-      'icon' => 'mdi-swap-horizontal',
+      'icon' => '🎲',
       'text1' => clienttranslate('Exchange 1 card with the deck.'),
       'text2' => '',
       'balloonAttempt' => clienttranslate('I will exchange cards...'),
@@ -180,7 +180,7 @@ $this->actions = array(
    ),
    EXAMINE => array(
       'name' => clienttranslate('Examine'),
-      'icon' => 'mdi-incognito',
+      'icon' => '🔍',
       'text1' => clienttranslate('Choose player to view card (may force exchange).'),
       'text2' => '',
       'balloonAttempt' => clienttranslate('I will examine ${player_name2}\'s card...'),
@@ -196,7 +196,7 @@ $this->actions = array(
    ),
    ASSASSINATE => array(
       'name' => clienttranslate('Assassinate'),
-      'icon' => 'mdi-skull',
+      'icon' => '☠️',
       'text1' => clienttranslate('Pay ₤3.'),
       'text2' => clienttranslate('Choose player to lose influence.'),
       'balloonAttempt' => clienttranslate('I will assassinate ${player_name2}...'),
@@ -257,11 +257,11 @@ $this->characters = array(
 $this->factions = array(
    1 => array(
       'name' => clienttranslate('Monarchist'),
-      'icon' => 'mdi-crown',
+      'icon' => '👑',
    ),
    2 => array(
       'name' => clienttranslate('Populist'),
-      'icon' => 'mdi-party-popper',
+      'icon' => '🎉',
    ),
 );
 

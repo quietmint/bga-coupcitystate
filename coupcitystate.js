@@ -86,7 +86,7 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
             for (var faction in this.gamedatas.factions) {
                 var faction_ref = this.gamedatas.factions[faction];
                 if (faction_name == faction_ref.name) {
-                    return '<div class="faction-name faction-' + faction + '"><i class="iconify" data-icon="' + faction_ref.icon + '"></i> ' + _(faction_name) + '</div>';
+                    return '<div class="faction-name faction-' + faction + '">' + faction_ref.icon + ' ' + _(faction_name) + '</div>';
                 }
             }
             return faction_name;
@@ -734,7 +734,7 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
             dojo.removeClass('faction_' + player_id, 'faction-1 faction-2');
             dojo.addClass('faction_' + player_id, 'faction-' + faction);
             var factionEl = document.getElementById('faction_' + player_id);
-            factionEl.innerHTML = '<i class="iconify" data-icon="' + faction_ref.icon + '"></i>';
+            factionEl.innerHTML = faction_ref.icon;
             factionEl.title = _(faction_ref.name);
             dojo.removeClass('placemat_' + player_id, 'faction-1 faction-2');
             dojo.addClass('placemat_' + player_id, 'faction-' + faction);
@@ -770,12 +770,12 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
                 // New balloon
                 var html = '';
                 if (n.args.balloon == 'no') {
-                    html = '<i class="icon-action-no iconify" data-icon="mdi-thumb-up-outline"></i>';
+                    html = '👍';
                 } else if (n.args.balloon != null) {
                     if (n.args.action) {
                         var action_ref = this.gamedatas.actions[n.args.action];
                         if (action_ref != null) {
-                            html += '<i class="icon-action-' + n.args.action + ' iconify" data-icon="' + action_ref.icon + '"></i> ';
+                            html += action_ref.icon + ' ';
                         }
                     }
                     html += this.format_string_recursive(_(n.args.balloon), n.args);
