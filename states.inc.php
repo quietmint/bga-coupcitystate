@@ -51,17 +51,6 @@
 //    !! It is not a good idea to modify this file when a game is running !!
 
 $machinestates = array(
-    // The initial state. Please do not modify.
-    ST_GAME_BEGIN => array(
-        'name' => 'gameSetup',
-        'description' => '',
-        'type' => 'manager',
-        'action' => 'stGameSetup',
-        'transitions' => array(
-            '' => ST_ROUND_BEGIN,
-        )
-    ),
-
     ST_ROUND_BEGIN => array(
         'name' => 'roundBegin',
         'description' => '',
@@ -267,14 +256,4 @@ $machinestates = array(
             'gameEnd' => ST_GAME_END,
         )
     ),
-
-    // Final state.
-    // Please do not modify.
-    ST_GAME_END => array(
-        'name' => 'gameEnd',
-        'description' => clienttranslate('End of game'),
-        'type' => 'manager',
-        'action' => 'stGameEnd',
-        'args' => 'argGameEnd'
-    )
 );

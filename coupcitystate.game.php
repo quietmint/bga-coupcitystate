@@ -17,7 +17,9 @@
  *
  */
 
-require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
+use Bga\GameFramework\Components\Deck;
+use Bga\GameFramework\Table;
+use Bga\GameFramework\VisibleSystemException;
 
 // Character constants
 define('DUKE', 1);
@@ -70,6 +72,13 @@ define('ST_ROUND_END', 98);
 define('ST_GAME_END', 99);
 
 class coupcitystate extends Table {
+    public Deck $cards;
+
+    public array $actions;
+    public array $characters;
+    public array $factions;
+    public array $balloons;
+
     public function __construct() {
         // Your global variables labels:
         //  Here, you can assign labels to global variables you are using for this game.
@@ -100,13 +109,7 @@ class coupcitystate extends Table {
             'variantDiplomat' => 103,
         ));
 
-        $this->cards = self::getNew('module.common.deck');
-        $this->cards->init('card');
-    }
-
-    protected function getGameName() {
-        // Used for translations and stuff. Please do not modify.
-        return 'coupcitystate';
+        $this->cards = $this->deckFactory->createDeck('card');
     }
 
     /*
@@ -177,13 +180,15 @@ class coupcitystate extends Table {
             $cards[] = array('type' => "$character", 'type_arg' => 0, 'nbr' => $copies);
         }
         $this->cards->createCards($cards, 'deck');
-        self::notifyAllPlayers('message', clienttranslate('The deck has ${size} cards with ${copies} copies of each character.'), array(
+        $this->bga->notify->all('message', clienttranslate('The deck has ${size} cards with ${copies} copies of each character.'), array(
             'size' => count($cards) * $copies,
             'copies' => $copies
         ));
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
+
+        return \ST_ROUND_BEGIN;
     }
 
     /*
@@ -195,10 +200,9 @@ class coupcitystate extends Table {
         _ when the game starts
         _ when a player refreshes the game page (F5)
     */
-    protected function getAllDatas() {
-        $player_id = self::getCurrentPlayerId();
+    protected function getAllDatas(int $currentPlayerId) {
         $public = $this->getPublicData();
-        $private = $this->getPrivateData($player_id);
+        $private = $this->getPrivateData($currentPlayerId);
 
         $actions = $this->filterMeetsVariant($this->actions);
         return array(
@@ -335,10 +339,10 @@ class coupcitystate extends Table {
 
         // Optionally verify the card's location
         if ($card == null) {
-            throw new BgaVisibleSystemException('Card ' . $card_id . ' not found.');
+            throw new VisibleSystemException('Card ' . $card_id . ' not found.');
         }
         if ($location != null && $card['location'] != $location || $location_arg != 0 && $card['location_arg'] != $location_arg) {
-            throw new BgaVisibleSystemException('Card ' . $card_id . ' not in ' . $card['location'] . ($location_arg ? ' for player ' . $location_arg : ''));
+            throw new VisibleSystemException('Card ' . $card_id . ' not in ' . $card['location'] . ($location_arg ? ' for player ' . $location_arg : ''));
         }
 
         $card['name'] = $this->characters[$card['type']]['name'];
@@ -382,7 +386,7 @@ class coupcitystate extends Table {
             $player_id = $args['player_id'];
             self::DbQuery("UPDATE player SET balloon='$args_str' WHERE player_id=$player_id");
         }
-        self::notifyAllPlayers($action, $msg, $args);
+        $this->bga->notify->all($action, $msg, $args);
     }
 
     public function doReplace($player_id, $card_ids) {
@@ -403,15 +407,15 @@ class coupcitystate extends Table {
         if ($count == 2) {
             $args['i18n'][] = 'card_name2';
             $args['card_name2'] = $this->characters[array_shift($oldCards)['type']]['name'];
-            self::notifyAllPlayers('discard', clienttranslate('${player_name} discards the ${card_name} and the ${card_name2}, shuffles the deck, and draws replacements.'), $args);
+            $this->bga->notify->all('discard', clienttranslate('${player_name} discards the ${card_name} and the ${card_name2}, shuffles the deck, and draws replacements.'), $args);
         } else {
-            self::notifyAllPlayers('discard', clienttranslate('${player_name} discards the ${card_name}, shuffles the deck, and draws a replacement.'), $args);
+            $this->bga->notify->all('discard', clienttranslate('${player_name} discards the ${card_name}, shuffles the deck, and draws a replacement.'), $args);
         }
-        self::notifyPlayer($player_id, 'drawInstant', '', array(
+        $this->bga->notify->player($player_id, 'drawInstant', '', array(
             'player_id' => $player_id,
             'cards' => $newCards
         ));
-        self::notifyAllPlayers('draw', '', array(
+        $this->bga->notify->all('draw', '', array(
             'player_id' => $player_id,
             'count' => $count,
             'deck_count' => $deckCount
@@ -463,14 +467,14 @@ class coupcitystate extends Table {
         if (count($hand) > 0) {
             $card_ids = array_column($hand, 'id');
             $this->cards->moveCards($card_ids, 'tableau', $player_id);
-            self::notifyAllPlayers('revealInstant', '', array(
+            $this->bga->notify->all('revealInstant', '', array(
                 'player_id' => $player_id,
                 'cards' => $hand
             ));
         }
 
         // Eliminate
-        self::notifyAllPlayers('eliminate', '', array(
+        $this->bga->notify->all('eliminate', '', array(
             'player_id' => $player_id
         ));
         self::eliminatePlayer($player_id);
@@ -493,14 +497,14 @@ class coupcitystate extends Table {
             $hand = array_values($this->cards->getCardsInLocation('hand', $winner));
             if (count($hand) > 0) {
                 $card_ids = array_column($hand, 'id');
-                self::notifyAllPlayers('revealInstant', '', array(
+                $this->bga->notify->all('revealInstant', '', array(
                     'player_id' => $winner,
                     'cards' => $hand,
                     'alive' => true
                 ));
             }
 
-            self::DbQuery("UPDATE player SET player_score = 1 WHERE player_id = $winner");
+            $this->bga->playerScore->set((int)$winner, 1, null);
             $this->gamestate->nextState('roundEnd');
             return true;
         }
@@ -523,7 +527,7 @@ class coupcitystate extends Table {
 
         // Check variant
         if (!$this->meetsVariant($action_ref)) {
-            throw new BgaVisibleSystemException("Invalid move. Action ($action) not allowed in this game variant.");
+            throw new VisibleSystemException("Invalid move. Action ($action) not allowed in this game variant.");
         }
 
         // Check wealth
@@ -533,29 +537,29 @@ class coupcitystate extends Table {
             $cost = $target == $player_id ? 1 : 2;
         }
         if ($action != COUP && $wealth >= 10) {
-            throw new BgaUserException(self::_('Invalid move. You must Coup because you have ₤10.'));
+            throw new BgaUserException(clienttranslate('Invalid move. You must Coup because you have ₤10.'));
         } elseif ($wealth < $cost) {
-            throw new BgaUserException(sprintf(self::_('Invalid move. You need ₤%d for this action.'), $cost));
+            throw new BgaUserException(sprintf(clienttranslate('Invalid move. You need ₤%d for this action.'), $cost));
         } elseif ($action == EMBEZZLE && self::getGameStateValue('almshouse') < 1) {
-            throw new BgaUserException(self::_('Invalid move. Almshouse has no money.'));
+            throw new BgaUserException(clienttranslate('Invalid move. Almshouse has no money.'));
         }
 
         // Check target
         if ($action_ref['target']) {
             if ($target == 0 || $this->cards->countCardInLocation('hand', $target) == 0) {
-                throw new BgaUserException(self::_('Invalid move. No target player selected.'));
+                throw new BgaUserException(clienttranslate('Invalid move. No target player selected.'));
             }
             if ($action != CONVERT && $target == $player_id) {
-                throw new BgaUserException(self::_('Invalid move. Cannot target yourself for this action.'));
+                throw new BgaUserException(clienttranslate('Invalid move. Cannot target yourself for this action.'));
             }
             if ($action == STEAL && $this->getWealth($target) == 0) {
-                throw new BgaUserException(self::_('Invalid move. Target player has no money.'));
+                throw new BgaUserException(clienttranslate('Invalid move. Target player has no money.'));
             }
 
             $factions = $this->getPlayerFactions();
             $factionCount = count(array_unique(array_values($factions)));
             if ($action != CONVERT && $factionCount > 1 && $factions[$player_id] == $factions[$target]) {
-                throw new BgaUserException(self::_('Invalid move. Target player must belong to opposing faction.'));
+                throw new BgaUserException(clienttranslate('Invalid move. Target player must belong to opposing faction.'));
             }
             self::setGameStateValue('playerTarget', $target);
         }
@@ -702,7 +706,7 @@ class coupcitystate extends Table {
                 $player_id = self::getActivePlayerId();
                 $playerTurn = self::getGameStateValue('playerTurn');
                 $card = $this->getCard($card_id, 'hand', $player_id);
-                self::notifyPlayer($player_id, 'message', clienttranslate('🤫 Shhh! You reveal the ${card_name} to ${player_name}.'), array(
+                $this->bga->notify->player($player_id, 'message', clienttranslate('🤫 Shhh! You reveal the ${card_name} to ${player_name}.'), array(
                     'i18n' => array('card_name'),
                     'player_name' => $this->getName($playerTurn),
                     'card_name' => $card['name'],
@@ -712,7 +716,7 @@ class coupcitystate extends Table {
                 break;
 
             default:
-                throw new BgaVisibleSystemException("Unknown reason ($reason).");
+                throw new VisibleSystemException("Unknown reason ($reason).");
         }
     }
 
@@ -724,7 +728,7 @@ class coupcitystate extends Table {
         $action = self::getGameStateValue('action');
         $action_ref = $this->actions[$action];
         if (count($card_ids) != $action_ref['count']) {
-            throw new BgaUserException(sprintf(self::_('Invalid move. You must discard %d cards.'), $action_ref['count']));
+            throw new BgaUserException(sprintf(clienttranslate('Invalid move. You must discard %d cards.'), $action_ref['count']));
         }
         foreach ($card_ids as $card_id) {
             $card = $this->getCard($card_id, 'hand', $player_id);
@@ -733,7 +737,7 @@ class coupcitystate extends Table {
         $this->cards->moveCards($card_ids, 'deck');
         $this->cards->shuffle('deck');
         $deckCount = $this->cards->countCardInLocation('deck');
-        self::notifyPlayer($player_id, 'discardInstant', '', array(
+        $this->bga->notify->player($player_id, 'discardInstant', '', array(
             'player_id' => $player_id,
             'card_ids' => $card_ids
         ));
@@ -753,11 +757,11 @@ class coupcitystate extends Table {
         $player_id = self::getCurrentPlayerId();
         $playerTarget = self::getGameStateValue('playerTarget');
         $card = $this->getCard(self::getGameStateValue('cardExamine'));
-        self::notifyPlayer($player_id, 'unrevealInstant', '', array(
+        $this->bga->notify->player($player_id, 'unrevealInstant', '', array(
             'player_id' => $playerTarget,
             'cards' => array($card)
         ));
-        self::notifyAllPlayers('message', '${player_name} keeps the card.', array(
+        $this->bga->notify->all('message', '${player_name} keeps the card.', array(
             'player_name' => $this->getName($playerTarget)
         ));
         $this->gamestate->nextState('');
@@ -779,13 +783,13 @@ class coupcitystate extends Table {
         // Others see unknown discard
         $idsVisible = array(intval($player_id), intval($playerTarget));
         foreach ($idsVisible as $id) {
-            self::notifyPlayer($id, 'discardInstant', '', array(
+            $this->bga->notify->player($id, 'discardInstant', '', array(
                 'player_id' => $playerTarget,
                 'card_ids' => array($cardExamine),
                 'deck_count' => $deckCount + 1,
             ));
         }
-        self::notifyAllPlayers('discardInstant', '', array(
+        $this->bga->notify->all('discardInstant', '', array(
             'player_id' => $playerTarget,
             'count' => 1,
             'deck_count' => $deckCount + 1,
@@ -800,11 +804,11 @@ class coupcitystate extends Table {
 
         // Target sees visible draw
         // Everyone see mystery draw (target will ignore)
-        self::notifyPlayer($playerTarget, 'drawInstant', '', array(
+        $this->bga->notify->player($playerTarget, 'drawInstant', '', array(
             'player_id' => $playerTarget,
             'cards' => array($newCard)
         ));
-        self::notifyAllPlayers('draw', '', array(
+        $this->bga->notify->all('draw', '', array(
             'player_id' => $playerTarget,
             'count' => 1,
             'deck_count' => $deckCount
@@ -913,7 +917,7 @@ class coupcitystate extends Table {
                 break;
 
             default:
-                throw new BgaVisibleSystemException("Unknown reason ($reason).");
+                throw new VisibleSystemException("Unknown reason ($reason).");
         }
         return $args;
     }
@@ -987,7 +991,7 @@ class coupcitystate extends Table {
         $public = $this->getPublicData();
         foreach ($public['players'] as $player_id => $player) {
             $private = $this->getPrivateData($player_id);
-            self::notifyPlayer($player_id, 'roundBegin', '', $public + $private);
+            $this->bga->notify->player($player_id, 'roundBegin', '', $public + $private);
         }
         $this->gamestate->nextState('');
     }
@@ -1000,7 +1004,7 @@ class coupcitystate extends Table {
         }
 
         // Send current scores
-        self::notifyAllPlayers('scores', '', array('scores' => $scores));
+        $this->bga->notify->all('scores', '', array('scores' => $scores));
 
         // Game over
         $this->gamestate->nextState('gameEnd');
@@ -1367,7 +1371,7 @@ class coupcitystate extends Table {
                     $args['count'] = $action_ref['count'];
                     $newCards = $this->cards->pickCards($args['count'], 'deck', $playerTurn);
                     $args['deck_count'] = $this->cards->countCardInLocation('deck');
-                    self::notifyPlayer($playerTurn, 'drawInstant', '', array(
+                    $this->bga->notify->player($playerTurn, 'drawInstant', '', array(
                         'player_id' => $playerTurn,
                         'cards' => $newCards
                     ));
@@ -1377,7 +1381,7 @@ class coupcitystate extends Table {
                     $args['balloon'] = $this->balloons['wealth'];
                     $args['amount'] = min(2, $this->getWealth($target));
                     $args['wealth'] = $this->addWealth($playerTurn, $args['amount']);
-                    self::notifyAllPlayers('wealthInstant', '', array(
+                    $this->bga->notify->all('wealthInstant', '', array(
                         'player_id' => $target,
                         'wealth' => $this->addWealth($target, $args['amount'] * -1)
                     ));
@@ -1390,7 +1394,7 @@ class coupcitystate extends Table {
                     // Transfer money from player to almshouse
                     $almshouse = self::getGameStateValue('almshouse') + $args['amount'];
                     self::setGameStateValue('almshouse', $almshouse);
-                    self::notifyAllPlayers('wealthInstant', '', array(
+                    $this->bga->notify->all('wealthInstant', '', array(
                         'player_id' => $playerTurn,
                         'wealth' => $this->addWealth($playerTurn, $args['amount'] * -1),
                         'almshouse' => $almshouse
@@ -1473,7 +1477,7 @@ class coupcitystate extends Table {
             if ($playerBlock != 0 && $action == ASSASSINATE) {
                 // Still must pay if blocked
                 $wealth = $this->addWealth($playerTurn, -3);
-                self::notifyAllPlayers('wealthInstant', '', array(
+                $this->bga->notify->all('wealthInstant', '', array(
                     'player_id' => $playerTurn,
                     'wealth' => $wealth
                 ));
@@ -1490,7 +1494,7 @@ class coupcitystate extends Table {
         $cardExamine = self::getGameStateValue('cardExamine');
         $target = self::getGameStateValue('playerTarget');
         $card = $this->getCard($cardExamine, 'hand', $target);
-        self::notifyPlayer($playerTurn, 'revealInstant', clienttranslate('🤫 Shhh! ${player_name}\'s card is the ${card_name}.'), array(
+        $this->bga->notify->player($playerTurn, 'revealInstant', clienttranslate('🤫 Shhh! ${player_name}\'s card is the ${card_name}.'), array(
             'i18n' => array('card_name'),
             'player_id' => $target,
             'player_name' => $this->getName($target),
@@ -1552,7 +1556,7 @@ class coupcitystate extends Table {
             } elseif ($state['name'] == 'askExamine') {
                 $this->actionExamineKeep();
             } else {
-                throw new BgaVisibleSystemException('Zombie player ' . $active_player . ' stuck in unexpected state ' . $state['name']);
+                throw new VisibleSystemException('Zombie player ' . $active_player . ' stuck in unexpected state ' . $state['name']);
             }
         }
     }

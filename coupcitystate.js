@@ -454,15 +454,12 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
                 // Deselect target
                 dojo.query('.placemat.selected').removeClass('selected');
                 args = args || {};
-                args.lock = true;
-                this.ajaxcall('/coupcitystate/coupcitystate/' + action + '.html', args, this, function (result) { });
+                this.bga.actions.performAction(action, args);
             }
         },
 
         hasCard: function (stock, id) {
-            return stock.getAllItems().some(function (card) {
-                return card.id == id;
-            });
+            return stock.getAllItems().some((card) => card.id == id);
         },
 
         addUnknownCards: function (stock, count, from) {
@@ -722,7 +719,7 @@ define(["dojo", "dojo/_base/declare", "dojo/dom-attr", "ebg/core/gamegui", "ebg/
         notif_scores: function (n) {
             var scores = n.args.scores;
             for (player_id in scores) {
-                this.scoreCtrl[player_id].toValue(scores[player_id]);
+                this.bga.playerPanels.getScoreCounter(player_id).toValue(scores[player_id]);
             }
         },
 

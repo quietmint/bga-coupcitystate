@@ -33,8 +33,7 @@ class view_coupcitystate_coupcitystate extends game_view {
     }
 
     public function build_page($viewArgs) {
-        global $g_user;
-        $current_player_id = $g_user->get_id();
+        $current_player_id = $this->getCurrentPlayerId();
         $template = self::getGameName() . '_' . self::getGameName();
 
         // Translations for static text
